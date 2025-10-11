@@ -60,6 +60,7 @@ import BundleDetail from "./pages/BundleDetail";
 import B2BDistribution from "./pages/B2BDistribution";
 import Products from "./pages/Products";
 import PreOrderPolicy from "./pages/PreOrderPolicy";
+import Amazon from "./pages/Amazon";
 
 const queryClient = new QueryClient();
 
@@ -260,6 +261,7 @@ const App = () => (
               <Route path="/b2b" element={<PublicSiteLayout><B2BDistribution /></PublicSiteLayout>} />
               <Route path="/products" element={<PublicSiteLayout><Products /></PublicSiteLayout>} />
               <Route path="/pre-order-policy" element={<PublicSiteLayout><PreOrderPolicy /></PublicSiteLayout>} />
+              <Route path="/amazon" element={<PublicSiteLayout><Amazon /></PublicSiteLayout>} />
               
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
