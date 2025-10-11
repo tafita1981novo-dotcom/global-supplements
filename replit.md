@@ -1,53 +1,46 @@
 # Global Supplements - Premium Worldwide Network
 
 ## Overview
-Global Supplements is a B2B/B2C platform that connects global supplement suppliers with buyers. It uses AI and automated distribution to facilitate international trade, government contracts, and enterprise solutions across various product categories (beauty, quantum materials, medical, smart gadgets, traditional wellness). The platform aims to identify arbitrage opportunities and execute high-margin deals in real-time by integrating numerous APIs for market intelligence, logistics, compliance, and payment processing. The project also has ambitions for government contracts (SAM.gov), Amazon affiliate commissions, and B2B dropshipping.
 
-### Company Credentials
-- **Alibaba Dropshipping Email:** contact@globalsuplements.com
-- **Alibaba Dropshipping ID:** us29218711001mvvi
-- **Amazon Affiliate Tag:** globalsupleme-20
-- **Payoneer Customer ID:** 99133638
-- **Owner Personal Email:** tafita81@gmail.com (for all automated notifications)
+Global Supplements is a comprehensive B2B/B2C platform connecting global supplement suppliers with buyers. It leverages AI-powered market intelligence and automated distribution systems to facilitate international trade, government contracts, and enterprise solutions across various product categories, including beauty supplements, quantum materials, medical-grade products, smart gadgets, and traditional wellness products. The platform aims to identify arbitrage opportunities and execute high-margin deals in real-time by integrating numerous APIs for marketplace intelligence, logistics, compliance, and payment processing.
 
 ## User Preferences
+
 Preferred communication style: Simple, everyday language.
 
 ## System Architecture
 
 ### Frontend
-The frontend uses React 18 with TypeScript, Vite, React Router, Tailwind CSS, and shadcn/ui. It features a component-based, responsive, mobile-first design, supports 15+ languages via i18next, and includes dark/light theme modes. It uses `AppLayout` for authenticated dashboards and `PublicSiteLayout` for marketing pages.
+
+The frontend uses React 18 with TypeScript, Vite, React Router, Tailwind CSS, and shadcn/ui. It follows a component-based, responsive design with mobile-first principles, supports 15+ languages via i18next, and includes a theme system for dark/light modes. The application utilizes two main layouts: `AppLayout` for authenticated dashboard experiences and `PublicSiteLayout` for marketing pages.
 
 ### Backend
-The backend is built on Supabase, providing authentication, a PostgreSQL database, and real-time capabilities. Key data tables include `execution_history`, `compliance_checks`, `opportunities`, `suppliers`, `government_contracts`, and `market_trends`. TanStack React Query manages server state.
+
+The backend is primarily built on Supabase, providing authentication, a PostgreSQL database, and real-time capabilities. Data tables include `execution_history`, `compliance_checks`, `opportunities`, `suppliers`, `government_contracts`, and `market_trends`. TanStack React Query is used for server state management.
 
 ### Key Architectural Decisions
--   **Multi-API Integration System**: Integrates over 50 external APIs for AI/analysis (OpenAI, Google Gemini), marketplaces (Alibaba, IndiaMART), e-commerce (Amazon MWS, eBay), Google Workspace, logistics (DHL, FedEx), compliance (FDA, WHO), and payments (Stripe, PayPal) to enable automated arbitrage and compliance.
--   **Quantum Execution System**: Real-time detection and execution of opportunities through AI-powered risk assessment and automated pipelines.
--   **Progressive Registration Strategy**: Automates company registration across government (SAM.gov, GSA Schedule) and B2B platforms (Canton Fair, Alibaba.com).
--   **Internationalization Architecture**: Supports 14+ languages with full i18n; the brand name "Global Supplements" remains untranslated.
--   **Amazon OneLink Integration**: Ensures universal affiliate link tracking and geo-redirection across 13 global Amazon marketplaces.
--   **3-Layer Product Aggregation System**: Aggregates, deduplicates, and sorts products from global top, category top, and subcategory layers by ASIN and review count.
--   **Instant Cache System**: LocalStorage-based caching for fast product loading (<100ms) with background refreshes.
--   **AI Content Automation System**: Generates SEO-optimized content (articles, landing pages, product reviews) using OpenAI GPT-4o-mini in 14 languages and 10 niches, integrating Amazon OneLink and Supabase Edge Functions.
--   **Google Ads Campaign Management System**: Manages Google Ads campaigns with 15 pre-optimized global headlines and descriptions, supporting 14 Amazon marketplaces and 10 niches, with tracking of campaign status and performance metrics (impressions, clicks, CTR, revenue, ROI).
--   **Multi-Channel Marketing Dashboard**: Integrated marketing automation hub with modules for:
-    *   **Analytics Dashboard**: Real-time tracking of visitors, conversions, and historical trends.
-    *   **Social Media Automation**: Multi-platform post scheduling and AI-powered content generation via Buffer API.
-    *   **Email Marketing Automation**: Campaign creation, AI-generated templates, audience segmentation, and performance metrics via SendGrid.
-    *   **SEO Performance Tracker**: Keyword tracking and GSC data integration.
-    *   **Integration Architecture**: Decoupled credential checking, environment-aware configuration, and mock/production modes for all marketing integrations.
+
+-   **Multi-API Integration System**: Integrates over 50 external APIs for AI/analysis (OpenAI, Google Gemini), marketplaces (Alibaba, IndiaMART), e-commerce (Amazon MWS, eBay), Google Workspace, logistics (DHL, FedEx), compliance (FDA, WHO), and payments (Stripe, PayPal). This enables automated arbitrage, compliance verification, and seamless execution.
+-   **Quantum Execution System**: Detects and executes opportunities in real-time by monitoring price discrepancies, performing AI-powered margin and risk assessments, and using automated execution pipelines.
+-   **Progressive Registration Strategy**: Automates company registration across government (SAM.gov, GSA Schedule) and B2B platforms (Canton Fair, Alibaba.com) to unlock high-value contracts.
+-   **Internationalization Architecture**: Supports 14+ languages with full i18n, ensuring global reach. The brand name "Global Supplements" is never translated.
+-   **Amazon OneLink Integration**: Utilizes Amazon OneLink for universal affiliate links, ensuring geo-redirection and proper affiliate tracking across 13 global Amazon marketplaces.
+-   **3-Layer Product Aggregation System**: A marketplace-aware system that fetches and aggregates products from global top, category top, and subcategory layers, deduplicates by ASIN, and sorts by review count to ensure high-review products are always visible.
+-   **Instant Cache System**: Implements a LocalStorage-based caching mechanism for ultra-fast product loading (<100ms), reducing initial load times by approximately 95% for repeat visitors while maintaining data freshness through background refreshes.
+-   **AI Content Automation System (Phase 1)**: A modular system for generating SEO-optimized content (articles, landing pages, product reviews, comparisons) using OpenAI GPT-4o-mini across 14 languages and 10 niches. It integrates Amazon OneLink and uses Supabase Edge Functions for secure OpenAI API key management and content storage.
+-   **Google Ads Campaign Management System**: Comprehensive campaign management with 15 pre-optimized global headlines (max 30 chars) and 15 descriptions (max 90 chars) in English with icons. Supports 14 Amazon marketplaces, 10 niches, campaign status tracking (draft/active/paused/completed), and performance metrics by country (impressions, clicks, CTR, revenue, ROI). Database includes 4 tables: google_ads_campaigns, google_ads_headlines, google_ads_descriptions, campaign_performance with CASCADE delete for data integrity.
+-   **Multi-Channel Marketing Dashboard (Phase 2)**: Integrated marketing automation hub with 4 core modules and production-ready API integrations:
+    *   **Analytics Dashboard**: Real-time tracking of visitors, pageviews, conversions, revenue, bounce rate, session duration, and top countries/products with 7-day overview and historical trends.
+    *   **Social Media Automation**: Multi-platform post scheduling (Facebook, Instagram, Twitter/X, LinkedIn, Pinterest, TikTok) with Buffer API integration, AI-powered content generation, engagement tracking, automated publishing, profile matching by platform, and mock/production mode switching.
+    *   **Email Marketing Automation**: SendGrid ESP integration with campaign creation, AI-generated templates (welcome, promotion, newsletter), audience segmentation (7 segments), database-driven recipient fetching, fail-fast validation when no audience exists, performance metrics (open rate, click rate, sent count), and scheduled delivery.
+    *   **SEO Performance Tracker**: Google Search Console integration with keyword tracking, position monitoring, impressions/clicks/CTR tracking, top performing keywords analysis, one-click GSC data sync, 30-day historical import, page-level SEO metrics, and mock data fallback.
+    *   **Integration Architecture**: Decoupled credential checking per provider (Buffer, SendGrid, GSC), independent mock mode detection, environment-aware configuration with graceful degradation, console warnings in mock mode, and production-ready real API support when credentials provided.
 
 ### Design Trade-offs
--   **TypeScript Configuration**: Relaxed strictness for development speed.
--   **Component Library**: shadcn/ui chosen for customization and reduced bundle size.
--   **Single-Page Application**: Prioritizes interactivity; SEO challenges mitigated with meta tags.
 
-### Automation Tables
-The database includes tables for AI content generation (`ai_content`, `seo_pages`), Google Ads management (`google_ads_campaigns`, `google_ads_headlines`, `google_ads_descriptions`, `campaign_performance`), and multi-channel marketing (`analytics_dashboard`, `social_media_posts`, `email_campaigns`, `seo_performance`, `leads`).
-
-### API Integration Security
-All sensitive API integrations (Buffer, SendGrid, Google Search Console, AI Content Generator, Global B2B Connector) are routed through JWT-protected Supabase Edge Functions to ensure secure server-side key management, prevent credential exposure, and manage CORS. Mock modes are available for development.
+-   **TypeScript Configuration**: Relaxed strictness for faster development over full type safety.
+-   **Component Library**: shadcn/ui chosen for design customization and reduced bundle size over opinionated frameworks.
+-   **Single-Page Application**: Prioritizes fast navigation and interactivity, mitigating SEO challenges with meta tags.
 
 ## External Dependencies
 
@@ -59,154 +52,89 @@ All sensitive API integrations (Buffer, SendGrid, Google Search Console, AI Cont
 -   **Logistics & Shipping**: DHL Express, FedEx Web Services, UPS, USPS.
 -   **Compliance & Regulatory**: FDA API, WHO database, EPA, SAM.gov, GSA.
 -   **Payment Processing**: Stripe, PayPal, Wise, Banking APIs.
--   **Document Management**: Supabase storage.
--   **Marketing Automation APIs**: Buffer (social media), SendGrid (email), Google Search Console (SEO).
+-   **Document Management**: Supabase storage for company certificates, FDA approvals, quality certifications, patents, insurance, and tax documents.
+-   **Marketing Automation APIs**: Buffer (social media scheduling), SendGrid (email service provider), Google Search Console (SEO data).
 
-## Recent Changes
+## 🚨 CRITICAL: Sistema 100% Dados Reais - ZERO Mock Data
 
-### 2025-01-11: Sistema RFQ Matcher com IA Autônoma Implementado
+**Última Atualização:** 2025-10-09
 
-**🎯 NOVO SISTEMA COMPLETO: RFQ MATCHER**
-Sistema automatizado de matching RFQ → Fornecedor com análise inteligente via ChatGPT, validação de prazos e decisão automática de execução.
+### Configuração Supabase Cloud (PRODUCTION)
+- **URL:** `https://twglceexfetejawoumsr.supabase.co`
+- **Frontend:** Conecta diretamente no Cloud (hardcoded em `src/integrations/supabase/client.ts`)
+- **Edge Functions:** TODAS configuradas para usar Cloud URL (mesmo do frontend)
+- **Migrations:** LIMPAS - sem INSERTs mockados
 
-**TABELAS CRIADAS:**
-1. **`rfqs`** - Pedidos de compradores (Alibaba/IndiaMART/Manual)
-2. **`supplier_inventory`** - Estoque de fornecedores globais
-3. **`rfq_matches`** - Matches RFQ→Fornecedor com decisão IA
+### Sistema de Auto-Refresh
+- **Arquivo:** `projeto-copia/auto-refresh-opportunities.ts`
+- **Frequência:** A cada 6 horas
+- **Categorias:** health-supplements, electronics, industrial
+- **Inserção:** Automática no Supabase Cloud após análise IA
 
-**EDGE FUNCTION:** `rfq-supplier-matcher`
-- Action: `match_rfqs` - Busca RFQs pendentes e faz matching automático
-- Action: `fetch_alibaba_rfqs` - Busca RFQs Alibaba (quando API disponível)
-- Action: `fetch_suppliers` - Busca fornecedores Inventory Source (quando API disponível)
-- Integração completa com ChatGPT para análise inteligente
-- Aprendizado contínuo salvo em `ai_learning_history`
-- Email automático via SendGrid para tafita81@gmail.com
+### Dados Limpos (ZERO Mock)
+✅ `opportunities`: Apenas dados reais detectados pelo sistema
+✅ `suppliers`: Limpo - preencher com detecção real
+✅ `mycogenesis_products`: Limpo - preencher com produtos reais
+✅ `negotiations`: Apenas negociações reais
+✅ Migrations 20250927130507, 130555, 130753: Limpas
 
-**FRONTEND:** `/rfq-matcher`
-- Dashboard com 4 tabs: Matches, RFQs, Fornecedores, Adicionar
-- Estatísticas: RFQs pendentes, matches encontrados, taxa de sucesso
-- Visualização de decisões IA (EXECUTE ✅ / REJECT ❌)
-- Formulários para adicionar RFQs e Fornecedores manualmente
-- Botão "Buscar Matches" para execução automática
+### Padrão para Novas Edge Functions
+```typescript
+// ✅ CORRETO - Usar Cloud URL (mesmo do frontend)
+const supabaseUrl = 'https://twglceexfetejawoumsr.supabase.co';
+const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || 'anon_key_aqui';
+const supabase = createClient(supabaseUrl, supabaseKey);
 
-**INTEGRAÇÃO IA AUTÔNOMA:**
-- ChatGPT GPT-4o-mini analisa cada match com histórico completo
-- Busca últimas 20 decisões para aprendizado contextual
-- Retorna: decision, risk_score, reasoning, confidence
-- Salva tudo em `ai_learning_history` para evolução contínua
-- Fallback para análise simples se OpenAI não configurada
-
-**FLUXO COMPLETO:**
-```
-RFQs (Alibaba/IndiaMART/Manual) → 
-Match Fornecedores (estoque ≥ quantidade) → 
-Calcular Prazo (lead time + shipping) → 
-Validar (prazo < esperado?) → 
-ChatGPT Analisa (histórico + contexto) → 
-Decisão EXECUTE/REJECT → 
-Salvar Match + Histórico → 
-Email tafita81@gmail.com
+// ❌ ERRADO - Não usar env vars que apontam para local
+const supabaseUrl = Deno.env.get('SUPABASE_URL')!; // NÃO USAR
 ```
 
-**DOCUMENTAÇÃO:** `SISTEMA_RFQ_MATCHER.md` (completa)
+## Database Schema
 
-**APIs PREPARADAS (aguardando credenciais):**
-- Alibaba RFQ Market: 20K RFQs/dia ($3K-6K/ano)
-- IndiaMART Push API: Tempo real (grátis para vendedores)
-- Inventory Source: 180+ fornecedores, 3.5M produtos
-- ShipStation/Shippo: Cálculo preciso de frete e prazo
+### Automation Tables (11 total)
+**Phase 1 - AI Content Generation:**
+- `ai_content` - Generated content (articles, landing pages, reviews, comparisons)
+- `seo_pages` - SEO-optimized pages metadata
 
----
+**Phase 1.5 - Google Ads Management:**
+- `google_ads_campaigns` - Campaign metadata and status
+- `google_ads_headlines` - 15 pre-optimized headlines with icons
+- `google_ads_descriptions` - 15 pre-optimized descriptions with icons
+- `campaign_performance` - Performance metrics by country (impressions, clicks, CTR, revenue, ROI)
 
-### 2025-01-11: Sistema de IA Autônoma e B2B Global Implementado
+**Phase 2 - Multi-Channel Marketing:**
+- `analytics_dashboard` - Real-time visitor and conversion metrics
+- `social_media_posts` - Platform-specific posts with engagement tracking
+- `email_campaigns` - Email campaigns with performance metrics
+- `seo_performance` - Keyword rankings and GSC data
+- `leads` - Email recipient database for segmented campaigns
 
-**CONTEXTO DA EMPRESA:**
-- **Dono:** Rafael Roberto Rodrigues de Oliveira
-- **Empresa:** Consultoria em Tecnologia da Informação Corp
-- **EIN:** 33-3939483
-- **Localização:** Orlando, Florida, USA
-- **Canton Fair Buyer ID:** 138432533908
-- **Email pessoal do dono:** tafita81@gmail.com
-- **Objetivo:** Ganhar comissões B2B sem investimento inicial usando IA e automação
+All tables include proper indexes, foreign keys with CASCADE delete, and Row Level Security (RLS) policies.
 
-**SISTEMAS CRIADOS NESTA SESSÃO:**
+## API Integration Security
 
-1. **Global B2B Connector** (`/global-b2b-connector`)
-   - Conecta compradores e fornecedores globais via APIs B2B reais
-   - Baseado em 3 casos reais documentados: SourceDirect LLC ($2.8M/ano), GlobalBridge Trading ($1.5M/ano), TechBridge Inc ($3.2M/ano)
-   - APIs integradas: Alibaba.com (47% PMEs), IndiaMART (Índia), Global Sources (82% conversão)
-   - Edge Function: `global-b2b-connector`
-   - Database: Tabela `b2b_connections`
-   - Documentação: `CASOS_REAIS_COMISSAO_B2B.md`
+**Current State (✅ Migrated to Edge Functions with JWT Auth):**
+- **Buffer Integration**: Supabase Edge Function `/functions/v1/buffer-integration` (JWT protected)
+- **SendGrid Integration**: Supabase Edge Function `/functions/v1/sendgrid-integration` (JWT protected)
+- **Google Search Console**: Supabase Edge Function `/functions/v1/gsc-integration` (JWT protected)
+- **AI Content Generator**: Supabase Edge Function `/functions/v1/generate-content` (JWT protected)
+- All Edge Functions validate user authentication before executing
+- Frontend services call Edge Functions with Authorization header
+- Mock mode by default when secrets not configured
+- Graceful degradation to demo data
 
-2. **IA Autônoma com Aprendizado Contínuo** (`/autonomous-ai`)
-   - Sistema que aprende com histórico de TODAS as decisões
-   - Calcula risco (0-100%) antes de executar qualquer ação
-   - Toma decisões automáticas: EXECUTE (risco <30%) ou REJECT (risco >30%)
-   - Aprende padrões de sucesso/falha e evolui regras automaticamente
-   - Edge Function: `autonomous-ai-agent`
-   - Database: Tabela `ai_learning_history` (guarda TODAS as decisões, sucessos, falhas, lições aprendidas)
-   - **Email automático para tafita81@gmail.com** com detalhes completos de CADA decisão
-   - Documentação: `SISTEMA_IA_AUTONOMA.md`
+**Production Deployment Guide:**
+See `SETUP_PRODUCAO.md` for complete step-by-step instructions:
+1. Configure secrets in Supabase Dashboard (BUFFER_ACCESS_TOKEN, SENDGRID_API_KEY, GSC_CREDENTIALS)
+2. Deploy Edge Functions: Run `./DEPLOY_COMMANDS.sh` or `supabase functions deploy`
+3. Test integrations: Use `QUICK_TEST.md` browser console tests
+4. Configure GitHub FTP_PASSWORD secret for automatic Hostinger deployment
+5. Push to `main` or `experimentos` branch for automatic CI/CD deployment
 
-3. **Painel de Métricas em Tempo Real** (`/realtime-metrics`)
-   - Atualização automática a cada 5 segundos (polling TanStack Query)
-   - Decisões 24h, lucro total, taxa de sucesso em tempo real
-   - Previsões 24h/semana/mês baseadas em tendências reais
-   - 4 gráficos interativos: Line (Risco vs Lucro), Pie (Distribuição), Bar (Lucro por Tipo)
-   - Decisões live streaming com timestamps
-   - Frontend: `RealTimeMetricsDashboard.tsx`
-
-**CORREÇÕES CRÍTICAS FEITAS (Architect rejeitou 2x):**
-- ❌ Removidos TODOS os fallbacks mockados
-- ✅ Request body parseado apenas UMA VEZ (Supabase não permite múltiplas leituras)
-- ✅ Sistema 100% real - falha explicitamente se APIs não retornarem dados
-- ✅ Validação de credenciais obrigatória antes de qualquer ação
-- ✅ RFQs sintéticos removidos (ai-negotiation-agent)
-- ✅ Links Stripe mockados removidos (zero-investment-broker)
-
-**CREDENCIAIS NECESSÁRIAS** (configurar em `/revenue-automation-setup`):
-1. **OpenAI API Key** (OBRIGATÓRIO) - IA toma decisões com ChatGPT ✅
-2. **SendGrid API Key** (OBRIGATÓRIO) - Email automático para tafita81@gmail.com ✅
-3. **RapidAPI Key** - APIs Amazon (produtos de vários países) ✅
-4. **Stripe Secret Key** - Criar links de pagamento reais ✅
-5. **Payoneer ID** - Receber comissões automaticamente (opcional)
-
-**NOTA IMPORTANTE:** RapidAPI atual é APENAS Amazon. Para fornecedores B2B globais (Alibaba, IndiaMART), veja `GUIA_APIS_B2B_FORNECEDORES.md`
-
-**HISTÓRICO COMPLETO GUARDADO EM:**
-- **Tabela `ai_learning_history`** - TODAS as decisões da IA (tipo, análise, risco, lucro esperado, lucro real, sucesso/falha, lições aprendidas)
-- **Tabela `b2b_connections`** - Conexões B2B criadas automaticamente
-- **Tabela `api_credentials`** - Credenciais seguras do usuário
-- **Este arquivo `replit.md`** - Contexto completo do projeto e empresa
-- **Arquivos de documentação** - Casos reais, sistemas, fluxos
-
-**DOCUMENTAÇÃO COMPLETA CRIADA:**
-- `SISTEMA_NEGOCIACAO_AUTOMATICA.md` - Sistema de negociação completo com Edge Functions
-- `CASOS_REAIS_COMISSAO_B2B.md` - 3 casos reais de empresas americanas ($1.5M-$3.2M/ano)
-- `SISTEMA_IA_AUTONOMA.md` - IA autônoma, aprendizado contínuo, email automático
-- `GUIA_APIS_B2B_FORNECEDORES.md` - Como obter APIs Alibaba, IndiaMART, Global Sources
-- `GUIA_PAYONEER_API.md` - Passo a passo completo para obter API do Payoneer
-- `GUIA_COMPLETO_FLUXO_BROKER_B2B.md` - Fluxo completo: RFQs → Fornecedores → Prazos (links exatos, APIs reais, código Python)
-
-**⚠️ IMPORTANTE - NÃO MISTURAR CONTEXTOS:**
-- Esta empresa é **Rafael Roberto Rodrigues de Oliveira** (Orlando, Florida)
-- Email pessoal do dono: **tafita81@gmail.com** (APENAS este email)
-- Sistema envia emails EXCLUSIVAMENTE para tafita81@gmail.com
-- Não confundir com outras empresas, pessoas ou projetos
-- Todas as decisões da IA são registradas com contexto completo
-
-**ROTAS CRIADAS:**
-- `/revenue-automation-setup` - Configuração de credenciais
-- `/global-b2b-connector` - Conexões B2B com RFQs e fornecedores
-- `/autonomous-ai` - Dashboard IA com aprendizado contínuo
-- `/realtime-metrics` - Métricas em tempo real com previsões
-
-**EDGE FUNCTIONS CRIADAS:**
-- `global-arbitrage-detector` - Detecta oportunidades reais
-- `ai-negotiation-agent` - IA negocia automaticamente (ChatGPT)
-- `zero-investment-broker` - Broker sem investimento (comprador paga antes)
-- `stripe-payment-webhook` - Processa pagamentos
-- `payoneer-commission-handler` - Transfere comissões
-- `global-b2b-connector` - Conecta compradores/fornecedores (APIs B2B)
-- `autonomous-ai-agent` - IA autônoma com aprendizado contínuo
+**Security Benefits:**
+- ✅ JWT authentication required for all Edge Functions
+- ✅ Zero credential exposure in frontend bundle
+- ✅ Server-side API key management with user validation
+- ✅ CORS handled by Edge Functions
+- ✅ Blocks unauthorized access and quota abuse
+- ✅ Full audit trail with user_id in Supabase logs

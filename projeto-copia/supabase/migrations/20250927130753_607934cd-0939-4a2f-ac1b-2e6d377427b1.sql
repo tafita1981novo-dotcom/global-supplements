@@ -1,0 +1,1 @@
+-- DADOS MOCKADOS REMOVIDOS - Usar apenas dados reais do opportunity-detector Edge Function
