@@ -572,24 +572,28 @@ const Amazon = () => {
     const searchId = `${Date.now()}_${Math.random()}`;
     
     const searchProductsEffect = async () => {
-      console.log(`🎬 [${searchId}] Request #${thisRequestId} - Category: ${selectedCategory}, Subcategory: ${selectedSubcategory}`);
+      console.log(`🎬 [${searchId}] Request #${thisRequestId} - Category: ${selectedCategory}, Subcategory: ${selectedSubcategory}, Custom: ${customSearchQuery || 'none'}`);
       
-      // ⚡ INSTANT CACHE: Mostra cache IMEDIATAMENTE (0ms)
-      const cachedProducts = instantCache.getInstant(currentMarketplace.id, selectedCategory, selectedSubcategory);
-      if (cachedProducts && cachedProducts.length > 0) {
-        console.log(`⚡ MOSTRANDO CACHE INSTANTÂNEO: ${cachedProducts.length} produtos`);
-        setProducts(cachedProducts);
-        
-        // Se cache está fresco (< 1 hora), NÃO busca novos dados
-        if (instantCache.isFresh(currentMarketplace.id, selectedCategory, selectedSubcategory)) {
-          console.log(`✅ Cache fresco! Não busca novos dados.`);
-          setLoading(false);
-          isSearching.current = false;
-          return;
+      // ⚡ INSTANT CACHE: Mostra cache IMEDIATAMENTE (0ms) - MAS NÃO para buscas customizadas!
+      if (!customSearchQuery) {
+        const cachedProducts = instantCache.getInstant(currentMarketplace.id, selectedCategory, selectedSubcategory);
+        if (cachedProducts && cachedProducts.length > 0) {
+          console.log(`⚡ MOSTRANDO CACHE INSTANTÂNEO: ${cachedProducts.length} produtos`);
+          setProducts(cachedProducts);
+          
+          // Se cache está fresco (< 1 hora), NÃO busca novos dados
+          if (instantCache.isFresh(currentMarketplace.id, selectedCategory, selectedSubcategory)) {
+            console.log(`✅ Cache fresco! Não busca novos dados.`);
+            setLoading(false);
+            isSearching.current = false;
+            return;
+          }
+          
+          // Cache velho: continua buscando em background (usuário já vê produtos)
+          console.log(`🔄 Cache expirado. Buscando novos dados em background...`);
         }
-        
-        // Cache velho: continua buscando em background (usuário já vê produtos)
-        console.log(`🔄 Cache expirado. Buscando novos dados em background...`);
+      } else {
+        console.log(`🔎 BUSCA CUSTOMIZADA DETECTADA - Ignorando cache, buscando: "${customSearchQuery}"`);
       }
       
       // 🔄 Ativa loading MANTENDO produtos existentes (não limpa até ter novos dados)
@@ -770,32 +774,35 @@ const Amazon = () => {
           console.log(`📁 Categoria selecionada: "${selectedCategory}" → Query: "${searchQuery}"`);
         }
         
-        // 🧠 SISTEMA INTELIGENTE: Verifica se precisa fazer requisição
+        // 🧠 SISTEMA INTELIGENTE: Gera chave para monitor (usado mesmo em buscas customizadas)
         const monitorKey = productMonitor.getCacheKey(
           selectedCategory,
           selectedSubcategory,
           currentMarketplace.id
         );
         
-        // Verifica se deve atualizar cache (inteligência para economizar requisições)
-        const shouldRefresh = productMonitor.shouldRefreshCache(monitorKey);
-        
-        if (!shouldRefresh) {
-          const cachedProducts = productMonitor.getCachedProducts(monitorKey);
-          if (cachedProducts && cachedProducts.length > 0) {
-            // Ordena por reviews (maior para menor)
-            const sorted = productMonitor.sortByReviews([...cachedProducts]);
-            const final = sorted.slice(0, 40);
-            
-            // 🛡️ Só atualiza se esta requisição ainda é válida
-            if (thisRequestId === searchFetchRequestId.current) {
-              setLoading(false);
-              setProducts([...final]);
-              instantCache.save(currentMarketplace.id, selectedCategory, selectedSubcategory, final);
-              setApiStats(apiClient.getUsageStats());
-              console.log(`✅ Usando cache inteligente: ${final.length} produtos ordenados por reviews`);
+        // Verifica cache inteligente (MAS NÃO para buscas customizadas!)
+        if (!customSearchQuery) {
+          // Verifica se deve atualizar cache (inteligência para economizar requisições)
+          const shouldRefresh = productMonitor.shouldRefreshCache(monitorKey);
+          
+          if (!shouldRefresh) {
+            const cachedProducts = productMonitor.getCachedProducts(monitorKey);
+            if (cachedProducts && cachedProducts.length > 0) {
+              // Ordena por reviews (maior para menor)
+              const sorted = productMonitor.sortByReviews([...cachedProducts]);
+              const final = sorted.slice(0, 40);
+              
+              // 🛡️ Só atualiza se esta requisição ainda é válida
+              if (thisRequestId === searchFetchRequestId.current) {
+                setLoading(false);
+                setProducts([...final]);
+                instantCache.save(currentMarketplace.id, selectedCategory, selectedSubcategory, final);
+                setApiStats(apiClient.getUsageStats());
+                console.log(`✅ Usando cache inteligente: ${final.length} produtos ordenados por reviews`);
+              }
+              return;
             }
-            return;
           }
         }
         
