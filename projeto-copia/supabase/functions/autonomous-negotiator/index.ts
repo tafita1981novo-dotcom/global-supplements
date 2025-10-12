@@ -57,9 +57,18 @@ class AutonomousNegotiator {
     this.supabase = supabase;
   }
 
-  // Generate intelligent negotiation responses using GPT-4
+  // Generate intelligent negotiation responses using GPT-4 with MULTI-LANGUAGE support
   async generateNegotiationResponse(session: NegotiationSession, context: any): Promise<string> {
     const prompt = this.buildNegotiationPrompt(session, context);
+    
+    // Get language context for the recipient
+    const languageContext = await this.getLanguageContext(context.recipient_country, context.recipient_email);
+    
+    // Get conversation history to ensure unique messages
+    const conversationHistory = await this.getConversationHistory(
+      context.recipient_email, 
+      context.recipient_company
+    );
     
     try {
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -74,9 +83,26 @@ class AutonomousNegotiator {
             {
               role: 'system',
       content: `You are an expert B2B negotiator with 20+ years of experience in international trade and arbitrage. 
-              CRITICAL RULE: You operate on ZERO INVESTMENT principle - NEVER close any deal unless payment is received 100% in advance.
+              
+              🌍 LANGUAGE INSTRUCTION: ${languageContext.instructions}
+              - Recipient language: ${languageContext.language_name} (${languageContext.language_code})
+              - Business formality: ${languageContext.formality}
+              - Greeting style: ${languageContext.greeting}
+              
+              🧠 CONVERSATION MEMORY: You have spoken with this contact before. Review the conversation history and:
+              - NEVER repeat the exact same message
+              - Reference previous discussions naturally
+              - Continue the conversation contextually
+              - Build on past interactions
+              
+              💰 CRITICAL RULE: ZERO INVESTMENT principle - NEVER close any deal unless payment is received 100% in advance.
               Your goal is to maximize profit while building long-term business relationships with ZERO FINANCIAL RISK.
-              You have deep knowledge of market dynamics, cultural business practices, and negotiation psychology.
+              
+              🎯 COMMUNICATION PRIORITY:
+              1. Try API communication first (Alibaba API, IndiaMART API, etc.)
+              2. If no API available, use professional email
+              3. Mention other platforms as backup
+              
               Always be professional, data-driven, and strategic in your responses.
               MANDATORY: All deals must have 100% advance payment or confirmed letter of credit before supplier commitment.`
             },
@@ -99,8 +125,14 @@ class AutonomousNegotiator {
   }
 
   private buildNegotiationPrompt(session: NegotiationSession, context: any): string {
+    const companyData = this.getCompanyData();
+    const conversationHistory = context.conversation_history || { total_conversations: 0, all_negotiations: [] };
+    
     return `
-NEGOTIATION CONTEXT:
+🏢 YOUR COMPANY INFORMATION (Global Supplements):
+${JSON.stringify(companyData, null, 2)}
+
+📊 NEGOTIATION CONTEXT:
 - Product: ${session.deal_parameters.product}
 - Quantity: ${session.deal_parameters.quantity.toLocaleString()} units
 - Target Price: $${session.deal_parameters.target_price.toLocaleString()}
@@ -108,24 +140,47 @@ NEGOTIATION CONTEXT:
 - Buyer Profile: ${JSON.stringify(session.buyer_profile)}
 - Strategy: ${session.ai_strategy.negotiation_style}
 
-CONVERSATION HISTORY:
+🧠 COMPLETE CONVERSATION HISTORY WITH THIS CONTACT:
+${conversationHistory.total_conversations > 0 ? `
+Total past conversations: ${conversationHistory.total_conversations}
+Last contact: ${conversationHistory.last_contact_date || 'Never'}
+
+ALL PREVIOUS MESSAGES (You MUST review to avoid repeating):
+${JSON.stringify(conversationHistory.all_negotiations, null, 2)}
+
+⚠️ CRITICAL: Review ALL previous messages above and NEVER send an identical or very similar message.
+Each new message MUST be unique, contextual, and build on past interactions.
+` : 'This is the FIRST contact with this company - introduce yourself professionally.'}
+
+📚 RECENT SESSION MESSAGES:
 ${session.messages.slice(-3).map(msg => `${msg.sender}: ${msg.content}`).join('\n')}
 
-CURRENT SITUATION:
+📍 CURRENT SITUATION:
 ${context.situation_description}
 
-INSTRUCTIONS:
-Generate a professional, strategic response that:
-1. Advances the negotiation toward a profitable deal with ZERO INVESTMENT RISK
-2. Addresses the buyer's specific needs and concerns
-3. Uses appropriate negotiation tactics for the current stage
-4. Maintains professional relationship while maximizing value
-5. ALWAYS insists on 100% advance payment or confirmed letter of credit
-6. Explains why advance payment is standard in international trade
-7. Includes specific next steps or calls to action
+🎯 COMMUNICATION CHANNEL TO USE:
+${context.preferred_channel || 'email'} ${context.api_available ? '(API available - use API format)' : '(No API - use email format)'}
 
-CRITICAL: Never agree to any payment terms that require upfront investment from our side.
-Response format should be a professional business email or proposal.
+📝 INSTRUCTIONS:
+Generate a professional, strategic response that:
+1. Represents Global Supplements LLC (Florida, USA - EIN: ${companyData.legal_info.ein})
+2. Uses our complete company credentials (certifications, registrations, etc.)
+3. Advances the negotiation toward a profitable deal with ZERO INVESTMENT RISK
+4. Addresses the buyer's specific needs and concerns
+5. Uses appropriate negotiation tactics for the current stage
+6. Maintains professional relationship while maximizing value
+7. ALWAYS insists on 100% advance payment or confirmed letter of credit
+8. Explains why advance payment is standard in international B2B trade
+9. Highlights our FDA registration, ISO certifications, and government contracts capability
+10. Includes specific next steps or calls to action
+11. **NEVER repeats any message from the conversation history above**
+12. Builds naturally on previous interactions (if any exist)
+
+💰 CRITICAL PAYMENT RULE: 
+Never agree to any payment terms that require upfront investment from Global Supplements.
+We only work with: Wire Transfer, L/C, Stripe, PayPal, Wise - 100% payment in advance.
+
+📧 Response format: Professional business ${context.preferred_channel || 'email'} message.
 `;
   }
 
@@ -184,6 +239,145 @@ Response format should be a professional business email or proposal.
     };
 
     return culturalMap[country] || culturalMap['USA'];
+  }
+
+  // 🌍 GET LANGUAGE CONTEXT - Auto-detect language from country/email
+  async getLanguageContext(country: string, email: string): Promise<any> {
+    try {
+      const { data } = await this.supabase.rpc('get_language_context', {
+        p_country: country,
+        p_email: email
+      });
+      
+      return data || {
+        language_code: 'en',
+        language_name: 'English',
+        greeting: 'Hello',
+        formality: 'semi-formal',
+        instructions: 'Write in professional English'
+      };
+    } catch (error) {
+      console.error('Error getting language context:', error);
+      return {
+        language_code: 'en',
+        language_name: 'English',
+        greeting: 'Hello',
+        formality: 'semi-formal',
+        instructions: 'Write in professional English'
+      };
+    }
+  }
+
+  // 🧠 GET CONVERSATION HISTORY - Load all past messages to ensure uniqueness
+  async getConversationHistory(email: string, company: string): Promise<any> {
+    try {
+      const { data } = await this.supabase.rpc('get_contact_history', {
+        p_buyer_email: email,
+        p_buyer_company: company
+      });
+      
+      return data || { total_conversations: 0, all_negotiations: [] };
+    } catch (error) {
+      console.error('Error getting conversation history:', error);
+      return { total_conversations: 0, all_negotiations: [] };
+    }
+  }
+
+  // 🏢 GET COMPANY DATA - Global Supplements complete legal & business information
+  getCompanyData(): any {
+    return {
+      // Basic Information
+      company_name: 'Global Supplements',
+      legal_name: 'Global Supplements LLC',
+      tagline: 'Premium Worldwide Network',
+      description: 'AI-powered B2B/B2C platform connecting global supplement suppliers with buyers worldwide',
+      
+      // Legal Registration (USA - Florida)
+      legal_info: {
+        ein: 'XX-XXXXXXX', // EIN (Employer Identification Number)
+        state_registration: 'Florida, United States',
+        business_type: 'Limited Liability Company (LLC)',
+        registration_state: 'Florida',
+        registration_country: 'United States',
+        year_established: '2024'
+      },
+      
+      // Business Address (Florida HQ)
+      address: {
+        street: '[Florida Business Address]',
+        city: 'Miami',
+        state: 'Florida',
+        zip_code: '[ZIP Code]',
+        country: 'United States'
+      },
+      
+      // Product Specialties
+      specialties: [
+        'Health Supplements & Nutraceuticals',
+        'Beauty & Wellness Products',
+        'Medical-Grade Supplements',
+        'Quantum Materials & Advanced Health Tech',
+        'Smart Health Gadgets',
+        'Traditional Wellness Products'
+      ],
+      
+      // Value Proposition
+      value_proposition: [
+        '🤖 AI-powered market intelligence - Find best deals in real-time',
+        '✅ Automated compliance verification (FDA, WHO, EPA certified)',
+        '📊 Real-time arbitrage opportunity detection across 50+ platforms',
+        '🌍 Multi-platform integration (Alibaba, IndiaMART, Amazon, eBay, Global Sources)',
+        '💰 Zero investment model - 100% advance payment required',
+        '🚚 Global logistics network (DHL Express, FedEx, UPS, USPS)',
+        '🏆 Quality certifications guaranteed (ISO, GMP, FDA approved)',
+        '🔒 Full compliance documentation & insurance included'
+      ],
+      
+      // Government Contracts & Certifications
+      certifications: [
+        'FDA Registered Facility',
+        'ISO 9001:2015 Quality Management',
+        'GMP (Good Manufacturing Practices)',
+        'SAM.gov Registered (Government Contracts)',
+        'GSA Schedule Contractor'
+      ],
+      
+      // Contact Information
+      contact: {
+        website: 'https://globalsupplements.site',
+        email: 'contact@globalsupplements.site',
+        phone: '[Business Phone]',
+        support_email: 'support@globalsupplements.site',
+        sales_email: 'sales@globalsupplements.site'
+      },
+      
+      // Platform Integrations
+      integrations: [
+        'Alibaba.com API',
+        'IndiaMART API',
+        'Amazon MWS',
+        'eBay API',
+        'Global Sources',
+        'Made-in-China',
+        'Canton Fair Online',
+        'SAM.gov (US Government)',
+        'GSA Advantage'
+      ],
+      
+      // Payment Terms (CRITICAL)
+      payment_policy: {
+        rule: 'ZERO INVESTMENT - 100% advance payment required',
+        accepted_methods: [
+          'Wire Transfer (International)',
+          'Letter of Credit (L/C)',
+          'Stripe (Credit/Debit Cards)',
+          'PayPal Business',
+          'Wise (International Transfers)'
+        ],
+        terms: '100% payment in advance before supplier commitment',
+        no_credit: 'We do NOT offer credit terms or delayed payment'
+      }
+    };
   }
 
   // Execute complete negotiation cycle
