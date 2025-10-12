@@ -1,16 +1,5 @@
-import OpenAI from 'openai';
-
-const getApiKey = () => {
-  if (typeof import.meta !== 'undefined' && import.meta.env) {
-    return import.meta.env.VITE_OPENAI_API_KEY;
-  }
-  return '';
-};
-
-const openai = new OpenAI({
-  apiKey: getApiKey(),
-  dangerouslyAllowBrowser: true
-});
+// OpenAI removed from frontend for security - use Edge Functions instead
+// TODO: Move AI validation to Edge Function if needed
 
 interface ProductValidation {
   isRelevant: boolean;
@@ -61,24 +50,8 @@ Respond in JSON format:
   "reason": "brief explanation"
 }`;
 
-      const completion = await openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a product categorization expert. Analyze products strictly and accurately.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        temperature: 0.3,
-        max_tokens: 150,
-        response_format: { type: 'json_object' }
-      });
-
-      const response = JSON.parse(completion.choices[0].message.content || '{}');
+      // Fallback validation logic without AI (for security)
+      const response = this.basicValidation(productTitle, category, subcategory);
       
       const result: ProductValidation = {
         isRelevant: response.isRelevant === true,
@@ -146,24 +119,8 @@ Respond in JSON format:
   "reasoning": "brief explanation"
 }`;
 
-      const completion = await openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a strict product categorization expert. Filter products accurately.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        temperature: 0.2,
-        max_tokens: 300,
-        response_format: { type: 'json_object' }
-      });
-
-      const response = JSON.parse(completion.choices[0].message.content || '{}');
+      // Fallback batch validation without AI (for security)
+      const response = { relevant: products.map((_, i) => i + 1), reasoning: 'Basic validation (AI disabled)' };
       const relevantIndices = new Set(response.relevant || []);
 
       console.log(`🤖 AI Batch Validation: ${relevantIndices.size}/${products.length} products relevant`);
@@ -219,24 +176,8 @@ Respond in JSON format:
   "keywords": ["keyword1", "keyword2", "keyword3"]
 }`;
 
-      const completion = await openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are an Amazon search optimization expert. Create precise, effective search queries.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        temperature: 0.5,
-        max_tokens: 150,
-        response_format: { type: 'json_object' }
-      });
-
-      const response = JSON.parse(completion.choices[0].message.content || '{}');
+      // Fallback query optimization without AI (for security)
+      const response = { optimizedQuery: subcategory || category, keywords: [subcategory || category] };
       
       const result: QueryOptimization = {
         optimizedQuery: response.optimizedQuery || '',
@@ -260,6 +201,22 @@ Respond in JSON format:
   clearCache() {
     this.validationCache.clear();
     this.queryCache.clear();
+  }
+
+  private basicValidation(productTitle: string, category: string, subcategory: string | null) {
+    const title = productTitle.toLowerCase();
+    const cat = category.toLowerCase();
+    const subcat = subcategory?.toLowerCase() || '';
+    
+    // Simple keyword matching
+    const isRelevant = title.includes(cat) || title.includes(subcat) || 
+                      cat.split(' ').some(word => title.includes(word));
+    
+    return {
+      isRelevant,
+      confidence: isRelevant ? 70 : 30,
+      reason: isRelevant ? 'Keyword match found' : 'No keyword match'
+    };
   }
 }
 
