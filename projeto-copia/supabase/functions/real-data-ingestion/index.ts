@@ -55,34 +55,59 @@ serve(async (req) => {
 
       console.log(`✅ Fetched ${products.length} real Amazon products`);
 
-      // Save to Supabase
-      const productsToInsert = products.slice(0, limit).map((p: any) => ({
-        asin: p.asin,
-        title: p.product_title,
-        price: parseFloat((p.product_price || '0').replace(/[^0-9.]/g, '')) || 0,
-        rating: p.product_star_rating || 0,
-        reviews: p.product_num_ratings || 0,
-        image_url: p.product_photo || p.image,
-        category: p.product_category || 'supplements',
-        marketplace: country,
-        affiliate_link: `https://www.amazon.com/dp/${p.asin}?tag=globalsupleme-20`,
-        source: 'amazon_rapidapi',
-        ingested_at: new Date().toISOString()
-      }));
+      // Save to opportunities table using execution_data for Amazon-specific fields
+      const productsToInsert = products.slice(0, limit).map((p: any) => {
+        const price = parseFloat((p.product_price || '0').replace(/[^0-9.]/g, '')) || 0;
+        const reviews = p.product_num_ratings || 0;
+        
+        return {
+          type: 'B2B',
+          source: `Amazon ${country} - RapidAPI`,
+          status: 'approved',
+          product_category: p.product_category || 'Supplements',
+          product_name: p.product_title,
+          quantity: reviews, // Using reviews as quantity proxy
+          target_country: country,
+          estimated_value: price * (reviews / 100), // Estimated monthly revenue
+          margin_percentage: 25.0,
+          risk_score: p.product_star_rating < 4 ? 30 : 10,
+          ai_analysis: {
+            rating: p.product_star_rating || 0,
+            reviews: reviews,
+            category: p.product_category
+          },
+          compliance_status: {
+            amazon_verified: true,
+            marketplace: country
+          },
+          execution_data: {
+            asin: p.asin,
+            price: price,
+            image_url: p.product_photo || p.image,
+            affiliate_link: `https://www.amazon.com/dp/${p.asin}?tag=globalsupleme-20`,
+            ingested_at: new Date().toISOString()
+          }
+        };
+      });
 
       const { data: inserted, error } = await supabase
-        .from('amazon_products')
-        .upsert(productsToInsert, { onConflict: 'asin' });
+        .from('opportunities')
+        .insert(productsToInsert);
 
       if (error) {
-        console.error('Supabase insert error:', error);
+        console.error('❌ Supabase insert error:', error);
+        throw new Error(`Database insert failed: ${error.message} - ${JSON.stringify(error.details || {})}`);
       }
+
+      const insertedCount = inserted?.length || 0;
+      console.log(`✅ Successfully saved ${insertedCount} products to database`);
 
       return new Response(JSON.stringify({
         success: true,
         source: 'Amazon RapidAPI',
         products_fetched: products.length,
-        products_saved: productsToInsert.length,
+        products_saved: insertedCount,
+        products_attempted: productsToInsert.length,
         query: query,
         country: country
       }), {
@@ -95,32 +120,38 @@ serve(async (req) => {
     // ============================================
     if (action === 'detect_buyers') {
       const { data: products } = await supabase
-        .from('amazon_products')
+        .from('opportunities')
         .select('*')
-        .order('reviews', { ascending: false })
+        .like('source', '%Amazon%RapidAPI%')
+        .order('quantity', { ascending: false })
         .limit(100);
 
       // Analyze top products to find potential B2B buyers
       const potentialBuyers: any[] = [];
 
       for (const product of products || []) {
+        const executionData = product.execution_data as any || {};
+        const aiAnalysis = product.ai_analysis as any || {};
+        const price = executionData.price || 20;
+        const reviews = product.quantity || 0;
+        
         // Simple heuristic: products with high volume = B2B opportunity
-        if (product.reviews > 1000 && product.price < 50) {
+        if (reviews > 1000 && price < 50) {
           potentialBuyers.push({
             platform: 'Amazon Market Analysis',
-            company_name: `Potential Buyer - ${product.title.substring(0, 40)}`,
+            company_name: `Potential Buyer - ${product.product_name.substring(0, 40)}`,
             contact_person: 'To Be Identified',
-            email: `contact-${product.asin}@tbd.com`,
-            country: product.marketplace || 'US',
-            industry: product.category || 'Health Supplements',
-            product_needs: [product.title],
-            order_volume: `${Math.floor(product.reviews / 10)} units/month`,
-            budget_range: `$${(product.price * product.reviews / 100).toFixed(0)}`,
+            email: `contact-${executionData.asin || 'tbd'}@prospect.com`,
+            country: product.target_country || 'US',
+            industry: product.product_category || 'Health Supplements',
+            product_needs: [product.product_name],
+            order_volume: `${Math.floor(reviews / 10)} units/month`,
+            budget_range: `$${(price * reviews / 100).toFixed(0)}`,
             timeline: '30-60 days',
-            lead_score: Math.min(95, 50 + Math.floor(product.reviews / 100)),
+            lead_score: Math.min(95, 50 + Math.floor(reviews / 100)),
             status: 'prospect',
             decision_maker_level: 'medium',
-            company_size: product.reviews > 5000 ? 'large' : 'medium',
+            company_size: reviews > 5000 ? 'large' : 'medium',
             created_at: new Date().toISOString()
           });
         }
@@ -133,7 +164,7 @@ serve(async (req) => {
       return new Response(JSON.stringify({
         success: true,
         buyers_detected: potentialBuyers.length,
-        opportunities_analyzed: opportunities?.length || 0
+        opportunities_analyzed: products?.length || 0
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
