@@ -67,6 +67,7 @@ import MarketingDashboard from "./pages/MarketingDashboard";
 import BrokerDashboard from "./pages/broker/BrokerDashboard";
 import CredentialsManager from "./pages/CredentialsManager";
 import GmailOAuthTest from "./pages/GmailOAuthTest";
+import AutomationDashboard from "./pages/AutomationDashboard";
 
 const queryClient = new QueryClient();
 
@@ -296,6 +297,11 @@ const App = () => (
               <Route path="/gmail-oauth-test" element={
                 <AppLayout>
                   <GmailOAuthTest />
+                </AppLayout>
+              } />
+              <Route path="/automation-dashboard" element={
+                <AppLayout>
+                  <AutomationDashboard />
                 </AppLayout>
               } />
               
