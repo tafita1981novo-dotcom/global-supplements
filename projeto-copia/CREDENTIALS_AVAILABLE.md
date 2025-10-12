@@ -45,7 +45,8 @@
   - Revenue Impact: $5K-$15K/month (quando completo)
   - Setup: Ver `GMAIL_OAUTH_SETUP.md`
   
-- **SendGrid API**: ✅ Configurado via user
+- **SendGrid API**: ✅ CONFIGURADO (2025-10-12)
+  - Key: SG.VI7Y... ✅
   - Revenue Impact: $2K-$8K/month
   - Setup: https://app.sendgrid.com/settings/api_keys
   
@@ -61,12 +62,14 @@
   - Uso: B2B Buyer Detection via scraping
 
 ### 💳 PAYMENT PROCESSING
-- **Stripe Public Key**: ✅ Configurado (pk_test_...)
+- **Stripe Public Key**: ✅ CONFIGURADO (2025-10-12)
+  - Key: pk_test_51SHW... ✅
   - Frontend-safe key
-  
-- **Stripe Secret Key**: ✅ Configurado (sk_test_...)
-  - Server-side only for security
   - Revenue Impact: $3K-$10K/month
+  
+- **Stripe Secret Key**: ✅ CONFIGURADO (2025-10-12)
+  - Key: sk_live_51SHWC5... ✅ (LIVE/PRODUCTION KEY!)
+  - Server-side only for security
   - Setup: https://dashboard.stripe.com/apikeys
   
 - **Payoneer ID**: ❌ Pendente
@@ -105,6 +108,7 @@ import credentialsService from '@/services/credentialsService';
 const openaiKey = credentialsService.getOpenAIKey();
 const rapidApiKey = credentialsService.getRapidAPIKey();
 const stripePublic = credentialsService.getStripePublicKey();
+const sendgrid = credentialsService.getSendGridApiKey();
 const companyInfo = credentialsService.getCompanyInfo();
 
 // Check status
@@ -112,17 +116,18 @@ const status = credentialsService.getConfigurationStatus();
 console.log(`${status.configured}/${status.total} APIs configured`);
 ```
 
-### 2. **Environment Variables**
+### 2. **Environment Variables (Frontend)**
 ```typescript
 const rapidKey = import.meta.env.VITE_RAPIDAPI_KEY;
 const openai = import.meta.env.VITE_OPENAI_API_KEY;
 const stripePublic = import.meta.env.VITE_STRIPE_PUBLIC_KEY;
+const sendgrid = import.meta.env.VITE_SENDGRID_API_KEY;
 ```
 
 ### 3. **Server-Side Only (Edge Functions)**
 ```typescript
 // These are NOT in VITE_ vars for security
-const stripeSecret = process.env.STRIPE_SECRET_KEY;
+const stripeSecret = process.env.STRIPE_SECRET_KEY; // sk_live_...
 const gmailRefresh = process.env.GMAIL_REFRESH_TOKEN;
 ```
 
@@ -134,7 +139,7 @@ const gmailRefresh = process.env.GMAIL_REFRESH_TOKEN;
 1. **NÃO solicite credenciais que JÁ EXISTEM**
    - OpenAI ✅ JÁ TEM
    - RapidAPI ✅ JÁ TEM
-   - Stripe ✅ JÁ TEM (ambas keys)
+   - Stripe ✅ JÁ TEM (ambas keys - LIVE em produção!)
    - SendGrid ✅ JÁ TEM
    - Company Info ✅ JÁ TEM
    - Supabase ✅ JÁ TEM
@@ -146,7 +151,7 @@ const gmailRefresh = process.env.GMAIL_REFRESH_TOKEN;
    - Use environment variables
 
 4. **NÃO exponha secrets server-side**
-   - Stripe Secret, Gmail Refresh Token = server-side ONLY
+   - Stripe Secret (sk_live_), Gmail Refresh Token = server-side ONLY
 
 ### ✅ SEMPRE FAÇA ISSO:
 1. **Use credentialsService** para TUDO
@@ -157,7 +162,7 @@ const gmailRefresh = process.env.GMAIL_REFRESH_TOKEN;
 
 ---
 
-## 📊 STATUS ATUAL
+## 📊 STATUS ATUAL (ATUALIZADO 2025-10-12)
 
 - **Configuradas**: 8/25 (32%)
 - **Parcialmente Configuradas**: 1 (Gmail OAuth - falta Refresh Token)
@@ -165,6 +170,11 @@ const gmailRefresh = process.env.GMAIL_REFRESH_TOKEN;
 - **High Priority Faltando**: 2 (LinkedIn, AliExpress)
 - **Potencial Desbloqueado**: $30K+/mês
 - **Potencial Bloqueado**: $55K+/mês
+
+### ✅ ÚLTIMAS CONFIGURAÇÕES (2025-10-12):
+- ✅ SendGrid API Key configurado
+- ✅ Stripe Public Key (pk_test_) configurado  
+- ✅ Stripe Secret Key (sk_live_) configurado - **PRODUÇÃO ATIVA!**
 
 ---
 
@@ -185,3 +195,4 @@ Quando adicionar nova credencial:
 3. Documente aqui com ✅ ou ❌
 4. Marque setup URL, revenue impact e descrição
 5. Atualize percentual no topo
+6. Adicione data da configuração

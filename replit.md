@@ -1,5 +1,27 @@
 # Global Supplements - Premium Worldwide Network
 
+## 🔑 Credentials Status (Updated 2025-10-12)
+
+### ✅ Configured APIs: 8/25 (32%)
+
+**AVAILABLE CREDENTIALS (DO NOT REQUEST AGAIN!):**
+- ✅ **Supabase** (URL + Anon Key) - Database & Auth  
+- ✅ **OpenAI GPT-4** - AI Negotiations ($5K-$20K/month)
+- ✅ **RapidAPI** - Amazon Product Data ($10K-$50K/month)
+- ✅ **SendGrid** (2025-10-12) - Email Automation ($2K-$8K/month)
+- ✅ **Stripe Public Key** (2025-10-12) - pk_test_51SHW...
+- ✅ **Stripe Secret Key** (2025-10-12) - sk_live_51SHWC5... **[PRODUCTION/LIVE!]**
+- ⚠️ **Gmail OAuth** (Partial: Client ID/Secret configured, need Refresh Token)
+- ✅ **Company Info** (Name, EIN, Address, Trade Name)
+
+**Latest Additions (2025-10-12):**
+- ✅ SendGrid API configured for email automation
+- ✅ Stripe fully configured with LIVE production keys (sk_live_)
+- Revenue unlocked: $5K-$18K/month from payment + email automation
+
+**Missing Critical:** Gmail Refresh Token, Payoneer ID  
+**Full documentation:** `CREDENTIALS_AVAILABLE.md`
+
 ## Overview
 
 Global Supplements is a B2B/B2C platform connecting global supplement suppliers with buyers. It leverages AI-powered market intelligence and automated distribution to facilitate international trade, government contracts, and enterprise solutions across diverse product categories (beauty, quantum materials, medical-grade, smart gadgets, traditional wellness). The platform's core purpose is to identify arbitrage opportunities and execute high-margin deals in real-time through extensive API integrations for marketplace intelligence, logistics, compliance, and payment processing.
