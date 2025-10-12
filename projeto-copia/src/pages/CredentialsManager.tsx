@@ -178,21 +178,31 @@ export default function CredentialsManager() {
   }, []);
 
   const checkExistingCredentials = async () => {
-    try {
-      const { data } = await (supabase as any)
-        .from('api_credentials')
-        .select('*');
+    // Check credentials from environment variables
+    const envCredentials: Record<string, boolean> = {
+      'rapidapi': !!import.meta.env.VITE_RAPIDAPI_KEY_1,
+      'openai': !!import.meta.env.VITE_OPENAI_API_KEY,
+      'gmail': !!import.meta.env.VITE_GMAIL_API_KEY,
+      'linkedin': !!import.meta.env.VITE_LINKEDIN_EMAIL,
+      'linkedin-password': !!import.meta.env.VITE_LINKEDIN_PASSWORD,
+      'stripe': !!import.meta.env.VITE_STRIPE_SECRET_KEY,
+      'payoneer': !!import.meta.env.VITE_PAYONEER_ID,
+      'sendgrid': !!import.meta.env.VITE_SENDGRID_API_KEY,
+      'buffer': !!import.meta.env.VITE_BUFFER_ACCESS_TOKEN
+    };
 
-      if (data) {
-        const updatedCredentials = credentials.map(cred => ({
-          ...cred,
-          configured: data.some((d: any) => d.service_name === cred.id && d.status === 'active')
-        }));
-        setCredentials(updatedCredentials);
-      }
-    } catch (error) {
-      console.error('Error checking credentials:', error);
-    }
+    console.log('🔑 Checking credentials:', {
+      rapidapi: import.meta.env.VITE_RAPIDAPI_KEY_1?.substring(0, 20) + '...',
+      openai: import.meta.env.VITE_OPENAI_API_KEY?.substring(0, 20) + '...',
+      configured: envCredentials
+    });
+
+    const updatedCredentials = credentials.map(cred => ({
+      ...cred,
+      configured: envCredentials[cred.id] || false
+    }));
+    
+    setCredentials(updatedCredentials);
   };
 
   const handleSave = async (credId: string) => {
@@ -207,12 +217,12 @@ export default function CredentialsManager() {
 
     setSaving(credId);
     try {
-      // Save to Supabase api_credentials table (encrypted)
+      // Save to Supabase system_credentials table (encrypted)
       const { error } = await (supabase as any)
-        .from('api_credentials')
+        .from('system_credentials')
         .upsert({
           service_name: credId,
-          api_key: value,
+          credential_value: value,
           status: 'active',
           metadata: {
             envKey: cred.envKey,
@@ -229,7 +239,6 @@ export default function CredentialsManager() {
       ));
 
       toast.success(`✅ ${cred.name} saved securely!`);
-      setValues(prev => ({ ...prev, [credId]: '' })); // Clear input
     } catch (error: any) {
       toast.error(`Failed to save: ${error.message}`);
     } finally {
