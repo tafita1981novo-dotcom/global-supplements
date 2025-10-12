@@ -290,15 +290,20 @@ SELECT
   COUNT(DISTINCT n.id) FILTER (WHERE n.status = 'completed') as successful_deals,
   COUNT(DISTINCT m.id) as total_messages_exchanged,
   MAX(m.sent_at) as last_contact_date,
-  json_agg(
-    DISTINCT json_build_object(
-      'negotiation_id', n.id,
-      'product', o.product_name,
-      'stage', n.negotiation_stage,
-      'status', n.status,
-      'started', n.created_at
-    ) ORDER BY n.created_at DESC
-  ) FILTER (WHERE n.id IS NOT NULL) as negotiation_history
+  (
+    SELECT json_agg(
+      json_build_object(
+        'negotiation_id', n2.id,
+        'product', o2.product_name,
+        'stage', n2.negotiation_stage,
+        'status', n2.status,
+        'started', n2.created_at
+      ) ORDER BY n2.created_at DESC
+    )
+    FROM public.negotiations n2
+    LEFT JOIN public.opportunities o2 ON o2.id = n2.opportunity_id
+    WHERE LOWER(n2.buyer_company) = LOWER(b.company_name)
+  ) as negotiation_history
 FROM public.b2b_buyers b
 LEFT JOIN public.negotiations n ON LOWER(n.buyer_company) = LOWER(b.company_name)
 LEFT JOIN public.opportunities o ON o.id = n.opportunity_id
