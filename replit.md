@@ -76,8 +76,12 @@ The backend is primarily built on Supabase, providing authentication, a PostgreS
   - Vite now correctly uses configs from projeto-copia/ subdirectory only
   - Build validated locally: 22-27s, 2858 modules, dist/ created successfully
   - Deploy ready: Build command runs in projeto-copia/ with correct entry point
-- ✅ **Pushed to GitHub**: 6 successful pushes (commits 35d8981, 87f25da, 3bcfe12, f758c9a, 526c0a3, d1c180e, 4a482a8)
-- ✅ **Deploys active**: GitHub Actions deploying to Hostinger automatically, Replit Deploy ready
+- ✅ **Replit Deploy configuration fixed**: Updated build command to include npm ci
+  - Build command now: `cd projeto-copia && npm ci && npm run build`
+  - Ensures packages are installed in correct directory before build
+  - Resolves npm package.json path mismatch error
+- ✅ **Pushed to GitHub**: 7 successful pushes (commits 9ddcd1d, 35d8981, 87f25da, 3bcfe12, f758c9a, 526c0a3, d1c180e)
+- ✅ **Deploys active**: GitHub Actions deploying to Hostinger automatically, Replit Deploy ready to test
 
 ## 🚨 CRITICAL: Sistema 100% Dados Reais - ZERO Mock Data
 
