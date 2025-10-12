@@ -59,8 +59,6 @@ class AutonomousNegotiator {
 
   // Generate intelligent negotiation responses using GPT-4 with MULTI-LANGUAGE support
   async generateNegotiationResponse(session: NegotiationSession, context: any): Promise<string> {
-    const prompt = this.buildNegotiationPrompt(session, context);
-    
     // Get language context for the recipient
     const languageContext = await this.getLanguageContext(context.recipient_country, context.recipient_email);
     
@@ -69,6 +67,12 @@ class AutonomousNegotiator {
       context.recipient_email, 
       context.recipient_company
     );
+    
+    // ✅ CRITICAL: Inject conversation history into context for GPT-4
+    context.conversation_history = conversationHistory;
+    
+    // Build prompt with full context including history
+    const prompt = this.buildNegotiationPrompt(session, context);
     
     try {
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -283,32 +287,36 @@ We only work with: Wire Transfer, L/C, Stripe, PayPal, Wise - 100% payment in ad
     }
   }
 
-  // 🏢 GET COMPANY DATA - Global Supplements complete legal & business information
+  // 🏢 GET COMPANY DATA - Complete legal & business information
   getCompanyData(): any {
     return {
       // Basic Information
       company_name: 'Global Supplements',
-      legal_name: 'Global Supplements LLC',
+      legal_name: 'Rafael Roberto Rodrigues de Oliveira Consultoria em Tecnologia da Informação CORP',
+      trade_name: 'Global Supplements - Premium Worldwide Network',
       tagline: 'Premium Worldwide Network',
       description: 'AI-powered B2B/B2C platform connecting global supplement suppliers with buyers worldwide',
       
       // Legal Registration (USA - Florida)
       legal_info: {
-        ein: 'XX-XXXXXXX', // EIN (Employer Identification Number)
+        ein: '33-3939483', // EIN (Employer Identification Number)
+        legal_owner: 'Rafael Roberto Rodrigues de Oliveira',
         state_registration: 'Florida, United States',
-        business_type: 'Limited Liability Company (LLC)',
+        business_type: 'Corporation (CORP)',
         registration_state: 'Florida',
         registration_country: 'United States',
-        year_established: '2024'
+        year_established: '2024',
+        verified_business: true
       },
       
-      // Business Address (Florida HQ)
+      // Business Address (Orlando, FL - Headquarters)
       address: {
-        street: '[Florida Business Address]',
-        city: 'Miami',
-        state: 'Florida',
-        zip_code: '[ZIP Code]',
-        country: 'United States'
+        street: '6200 Metrowest',
+        city: 'Orlando',
+        state: 'FL',
+        zip: '32385',
+        country: 'United States',
+        full_address: '6200 Metrowest, Orlando, FL 32385, USA'
       },
       
       // Product Specialties
@@ -346,9 +354,11 @@ We only work with: Wire Transfer, L/C, Stripe, PayPal, Wise - 100% payment in ad
       contact: {
         website: 'https://globalsupplements.site',
         email: 'contact@globalsupplements.site',
-        phone: '[Business Phone]',
+        location: '6200 Metrowest, Orlando, FL 32385, USA',
+        headquarters: 'Orlando, Florida, USA',
         support_email: 'support@globalsupplements.site',
-        sales_email: 'sales@globalsupplements.site'
+        sales_email: 'sales@globalsupplements.site',
+        available: '24/7 Global Support'
       },
       
       // Platform Integrations
