@@ -57,7 +57,7 @@ The backend is primarily built on Supabase, providing authentication, a PostgreS
 
 ## 📦 Recent Changes
 
-### 2025-10-12: Project Recovery & Security Fix
+### 2025-10-12: Project Recovery, Security Fix & Deploy Corrections
 - ✅ **projeto-copia folder successfully recovered** (436 files intact)
 - ✅ **Both sites operational**: / (main site) and /amazon (affiliate store)
 - ✅ **Security fix**: Removed unsafe OpenAI API usage from frontend (`aiProductValidator.ts`)
@@ -70,8 +70,12 @@ The backend is primarily built on Supabase, providing authentication, a PostgreS
   - Fixed build path to `projeto-copia/`
   - Automatic deploy on push to main (16x/day scheduled)
   - FTP deploy to Hostinger /public_html/
-- ✅ **Pushed to GitHub**: 407 objects (6.79 MiB) - commit 2f32bb1
-- ✅ **Deploy in progress**: GitHub Actions running automatic deployment
+- ✅ **Replit Deploy fix**: Removed duplicate index.html from root directory
+  - Vite build was failing because root index.html referenced /src/main.tsx (doesn't exist at root)
+  - Build command runs in projeto-copia/ subdirectory with correct index.html
+  - Deploy now resolves correct entry point: projeto-copia/index.html → projeto-copia/src/main.tsx
+- ✅ **Pushed to GitHub**: Multiple successful pushes (commits f758c9a, 526c0a3, d1c180e, 4a482a8)
+- ✅ **Deploys active**: GitHub Actions deploying to Hostinger automatically
 
 ## 🚨 CRITICAL: Sistema 100% Dados Reais - ZERO Mock Data
 
