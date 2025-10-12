@@ -51,129 +51,66 @@ export default function RealTimeArbitrageEngine() {
   const [selectedOpportunity, setSelectedOpportunity] = useState<ArbitrageOpportunity | null>(null);
   const [realTimeProfit, setRealTimeProfit] = useState(0);
 
+  // 🔥 REAL DATA ONLY - Load opportunities from Supabase
   useEffect(() => {
-    // Dados reais serão carregados de APIs reais
+    loadRealOpportunities();
+    
     if (isScanning) {
       const interval = setInterval(() => {
-        scanForNewOpportunities();
-      }, 30000); // Scan every 30 seconds
+        loadRealOpportunities(); // Refresh every 30 seconds when scanning
+      }, 30000);
       
       return () => clearInterval(interval);
     }
   }, [isScanning]);
 
-  const generateMockOpportunities = () => {
-    // REMOVIDO - Dados virão de fontes reais
-    const mockOpps: ArbitrageOpportunity[] = [
-      {
-        id: "gov-ai-001",
-        type: "government",
-        title: "Contrato Governo - Sistema IA para Educação",
-        description: "Licitação federal para sistema IA educacional. Fornecedor chinês oferece solução identical por 8% do valor licitado.",
-        sourcePrice: 85000,
-        targetPrice: 1200000,
-        margin: 94.2,
-        volume: 1,
-        riskLevel: "baixo",
-        executionTime: "3-5 dias",
-        profitPotential: 1115000,
-        apiConnections: ["SAM.gov", "Alibaba API", "Compliance Checker"],
-        automationLevel: 92,
-        status: "pronto",
-        detectedAt: new Date().toISOString(),
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-      },
-      {
-        id: "b2b-arb-001", 
-        type: "b2b_arbitrage",
-        title: "Equipamento Industrial - Fortune 500",
-        description: "Empresa americana precisa de componentes específicos. Fabricante chinês vende 78% mais barato via Alibaba.",
-        sourcePrice: 125000,
-        targetPrice: 580000,
-        margin: 78.4,
-        volume: 50,
-        riskLevel: "baixo",
-        executionTime: "7-10 dias",
-        profitPotential: 22750000,
-        apiConnections: ["Alibaba B2B", "IndiaMART", "Company Database"],
-        automationLevel: 89,
-        status: "detectado",
-        detectedAt: new Date().toISOString(),
-        expiresAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
-      },
-      {
-        id: "dropship-tech-001",
-        type: "dropship_tech", 
-        title: "Solução Cybersecurity Quantum-Safe",
-        description: "Empresas pagando $500K+ por soluções quantum-safe. Fornecedores chineses oferecem tecnologia equivalente.",
-        sourcePrice: 45000,
-        targetPrice: 520000,
-        margin: 91.3,
-        volume: 12,
-        riskLevel: "médio",
-        executionTime: "5-8 dias",
-        profitPotential: 5700000,
-        apiConnections: ["Security APIs", "Tech Suppliers", "Compliance Check"],
-        automationLevel: 85,
-        status: "analisando",
-        detectedAt: new Date().toISOString(),
-        expiresAt: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString()
-      },
-      {
-        id: "supply-chain-001",
-        type: "supply_chain",
-        title: "Gap Crítico - Semicondutores Especializados", 
-        description: "Fabricante americano com gap urgente. Fornecedor asiático disponível com qualidade equivalente.",
-        sourcePrice: 220000,
-        targetPrice: 890000,
-        margin: 75.3,
-        volume: 8,
-        riskLevel: "médio",
-        executionTime: "10-14 dias",
-        profitPotential: 5360000,
-        apiConnections: ["Global Sources", "Supply Chain APIs", "Quality Check"],
-        automationLevel: 87,
-        status: "pronto",
-        detectedAt: new Date().toISOString(),
-        expiresAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString()
-      }
-    ];
-    
-    setOpportunities(mockOpps);
-  };
+  const loadRealOpportunities = async () => {
+    try {
+      // Fetch real opportunities from Supabase
+      const { data, error } = await supabase
+        .from('opportunities')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(20);
 
-  const scanForNewOpportunities = () => {
-    // Simulate real-time detection
-    const hasNewOpp = Math.random() > 0.7;
-    
-    if (hasNewOpp) {
-      const newOpp: ArbitrageOpportunity = {
-        id: `new-${Date.now()}`,
-        type: "government",
-        title: "🚨 NOVA: Licitação IA Detectada",
-        description: "Sistema recém detectou nova licitação com margem 850%+",
-        sourcePrice: 95000,
-        targetPrice: 950000, 
-        margin: 90.0,
-        volume: 1,
-        riskLevel: "baixo",
-        executionTime: "2-4 dias",
-        profitPotential: 855000,
-        apiConnections: ["SAM.gov Real-time", "API Auto-match"],
-        automationLevel: 95,
-        status: "detectado",
-        detectedAt: new Date().toISOString(),
-        expiresAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()
-      };
-      
-      setOpportunities(prev => [newOpp, ...prev]);
-      setRealTimeProfit(prev => prev + newOpp.profitPotential);
-      
-      toast.success(`🎯 Nova oportunidade detectada: $${newOpp.profitPotential.toLocaleString()} profit potential!`);
-      
-      if (autoExecute && newOpp.margin > 85) {
-        executeOpportunity(newOpp);
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        // Transform Supabase data to ArbitrageOpportunity format
+        const realOpps: ArbitrageOpportunity[] = data.map(opp => ({
+          id: opp.id,
+          type: opp.type as any || "b2b_arbitrage",
+          title: opp.product_name || "Oportunidade Detectada",
+          description: `${opp.source} - Margem ${opp.margin_percentage}%`,
+          sourcePrice: opp.estimated_value || 0,
+          targetPrice: opp.estimated_value * (1 + (opp.margin_percentage / 100)) || 0,
+          margin: opp.margin_percentage || 0,
+          volume: 1,
+          riskLevel: opp.risk_score > 40 ? "alto" : opp.risk_score > 20 ? "médio" : "baixo",
+          executionTime: "2-7 dias",
+          profitPotential: (opp.estimated_value * (opp.margin_percentage / 100)) || 0,
+          apiConnections: [opp.source || "API"],
+          automationLevel: 85,
+          status: opp.status === "approved" ? "pronto" : opp.status === "analyzing" ? "analisando" : "detectado",
+          detectedAt: opp.created_at,
+          expiresAt: new Date(new Date(opp.created_at).getTime() + 7 * 24 * 60 * 60 * 1000).toISOString()
+        }));
+
+        setOpportunities(realOpps);
+        
+        // Calculate real-time profit from real data
+        const totalProfit = realOpps.reduce((sum, opp) => sum + opp.profitPotential, 0);
+        setRealTimeProfit(totalProfit);
+      } else {
+        // No opportunities yet - show message to trigger detection
+        toast.info("Nenhuma oportunidade detectada ainda. Inicie o scan para buscar novas oportunidades!");
+        setOpportunities([]);
+        setRealTimeProfit(0);
       }
+    } catch (error) {
+      console.error("Erro ao carregar oportunidades:", error);
+      toast.error("Erro ao buscar oportunidades reais");
+      setOpportunities([]);
     }
   };
 
