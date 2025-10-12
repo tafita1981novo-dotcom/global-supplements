@@ -34,33 +34,42 @@ export class RealDataIngestionService {
 
       console.log(`✅ Fetched ${products.length} real Amazon products`);
 
-      // Salva no Supabase (tabela opportunities)
-      const productsToSave = products.map(p => ({
-        product_name: p.title,
-        supplier_name: 'Amazon',
-        category: p.category,
-        price_per_unit: parseFloat((p.price || '0').replace(/[^0-9.]/g, '')) || 0,
-        minimum_order_quantity: 1,
-        delivery_days: 2, // Amazon Prime
-        commission_percentage: 5.0, // Amazon affiliate
-        reliability_score: p.rating || 4.5,
-        certifications: ['Amazon Verified'],
-        payment_terms: 'Credit Card',
-        source: 'amazon_rapidapi',
-        metadata: {
-          asin: p.asin,
-          reviews: p.reviews,
-          prime: p.prime,
-          affiliate_link: p.affiliateLink,
-          image: p.image,
-          marketplace: country
-        },
-        status: 'active'
-      }));
+      // Salva no Supabase (tabela opportunities) usando schema correto
+      const productsToSave = products.map(p => {
+        const price = parseFloat((p.price || '0').replace(/[^0-9.]/g, '')) || 0;
+        const estimatedMonthlyRevenue = price * (p.reviews / 100); // Estimativa baseada em reviews
+        
+        return {
+          type: 'B2B',
+          source: 'Amazon RapidAPI (Real)',
+          status: 'approved',
+          product_category: p.category,
+          product_name: p.title,
+          quantity: p.reviews, // Usando reviews como proxy de demanda
+          target_country: country,
+          estimated_value: estimatedMonthlyRevenue,
+          margin_percentage: 30.0, // Margem típica B2B
+          risk_score: p.rating < 4.0 ? 50 : 10, // Menor rating = maior risco
+          ai_analysis: {
+            asin: p.asin,
+            price: price,
+            rating: p.rating,
+            reviews: p.reviews,
+            prime: p.prime,
+            affiliate_link: p.affiliateLink,
+            image: p.image
+          },
+          compliance_status: {
+            amazon_verified: true,
+            category: p.category
+          },
+          execution_data: null
+        };
+      });
 
       const { data, error } = await supabase
         .from('opportunities')
-        .upsert(productsToSave, { onConflict: 'product_name,supplier_name' });
+        .insert(productsToSave);
 
       if (error) {
         console.error('Supabase save error:', error);
@@ -99,13 +108,13 @@ export class RealDataIngestionService {
     buyers_detected: number;
   }> {
     try {
-      // Busca oportunidades com alto volume de reviews (indicador de demanda B2B)
+      // Busca oportunidades com alto volume (quantity = reviews)
       const { data: opportunities, error } = await supabase
         .from('opportunities')
         .select('*')
-        .gt('reliability_score', 4.0)
-        .lt('price_per_unit', 50)
-        .order('metadata->reviews', { ascending: false })
+        .gt('quantity', 1000) // Mais de 1000 reviews/demanda
+        .lt('risk_score', 30) // Baixo risco
+        .order('quantity', { ascending: false })
         .limit(100);
 
       if (error || !opportunities || opportunities.length === 0) {
@@ -115,17 +124,19 @@ export class RealDataIngestionService {
       const potentialBuyers: any[] = [];
 
       for (const opp of opportunities) {
-        const reviews = opp.metadata?.reviews || 0;
+        const volume = opp.quantity || 0;
+        const aiData = (opp.ai_analysis as any) || {};
+        const price = aiData.price || 20;
         
-        // Heurística: >1000 reviews = alta demanda = oportunidade B2B
-        if (reviews > 1000) {
+        // Heurística: >1000 volume = alta demanda = oportunidade B2B
+        if (volume > 1000) {
           potentialBuyers.push({
             company_name: `Potential Buyer - ${opp.product_name.substring(0, 30)}`,
-            country: opp.metadata?.marketplace || 'US',
+            country: opp.target_country || 'US',
             product_interest: opp.product_name,
-            estimated_monthly_volume: Math.floor(reviews / 10),
-            target_price_per_unit: opp.price_per_unit * 0.7, // 30% desconto B2B
-            potential_commission: opp.price_per_unit * 0.3,
+            estimated_monthly_volume: Math.floor(volume / 10),
+            target_price_per_unit: price * 0.7, // 30% desconto B2B
+            potential_commission: price * 0.3,
             source: 'market_analysis',
             contact_status: 'prospect'
           });
