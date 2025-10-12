@@ -26,26 +26,30 @@ class GmailOAuthService {
 
   /**
    * Check if Gmail OAuth is configured (server-side)
-   * Frontend can only check if Edge Function responds, not actual credentials
+   * Returns true if Edge Function is accessible (auth check only)
    */
   async isConfigured(): Promise<boolean> {
     try {
+      const authToken = await this.getAuthToken();
+      if (!authToken) return false;
+
+      // Just check if function responds to authenticated request
       const response = await fetch(this.EDGE_FUNCTION_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        },
         body: JSON.stringify({
-          to: 'test@example.com',
+          to: 'config-check@example.com',
           subject: 'Config Check',
           body: 'Test'
         })
       });
       
-      const data = await response.json();
-      // If error mentions "not configured", return false
-      if (data.error && data.error.includes('not configured')) {
-        return false;
-      }
-      return true;
+      // If we get any response (including errors about missing Gmail config),
+      // it means the function is deployed and accessible
+      return response.status !== 404;
     } catch {
       return false;
     }

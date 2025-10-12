@@ -71,20 +71,22 @@ class CredentialsService {
   }
 
   // ============ MARKETING & COMMUNICATION ============
+  // NOTE: Gmail OAuth credentials are stored SERVER-SIDE in Supabase Edge Function
+  // These getters are deprecated and return undefined to prevent client-side exposure
   getGmailAPIKey(): string | undefined {
-    return import.meta.env.VITE_GMAIL_API_KEY;
+    return undefined; // Server-side only
   }
 
   getGmailClientID(): string | undefined {
-    return import.meta.env.VITE_GMAIL_CLIENT_ID;
+    return undefined; // Server-side only in Supabase secrets
   }
 
   getGmailClientSecret(): string | undefined {
-    return import.meta.env.VITE_GMAIL_CLIENT_SECRET;
+    return undefined; // Server-side only in Supabase secrets
   }
 
   getGmailRefreshToken(): string | undefined {
-    return import.meta.env.VITE_GMAIL_REFRESH_TOKEN;
+    return undefined; // Server-side only in Supabase secrets
   }
 
   getSendGridAPIKey(): string | undefined {
@@ -247,31 +249,13 @@ class CredentialsService {
 
       // MARKETING
       {
-        name: 'Gmail OAuth Client ID',
-        key: this.getGmailClientID(),
-        configured: !!this.getGmailClientID(),
+        name: 'Gmail OAuth (Server-Side)',
+        key: undefined, // Server-side only - never exposed to client
+        configured: false, // Configure in Supabase Edge Function secrets
         category: 'marketing',
         priority: 'critical',
-        setupUrl: 'https://console.cloud.google.com/apis/credentials',
-        description: 'Gmail OAuth Authentication'
-      },
-      {
-        name: 'Gmail OAuth Client Secret',
-        key: this.getGmailClientSecret(),
-        configured: !!this.getGmailClientSecret(),
-        category: 'marketing',
-        priority: 'critical',
-        setupUrl: 'https://console.cloud.google.com/apis/credentials',
-        description: 'Gmail OAuth Secret'
-      },
-      {
-        name: 'Gmail Refresh Token',
-        key: this.getGmailRefreshToken(),
-        configured: !!this.getGmailRefreshToken(),
-        category: 'marketing',
-        priority: 'critical',
-        setupUrl: 'https://developers.google.com/oauthplayground',
-        description: 'Gmail OAuth Refresh Token'
+        setupUrl: 'https://supabase.com/dashboard/project/twglceexfetejawoumsr/functions',
+        description: 'Gmail OAuth - Configured server-side in Supabase'
       },
       {
         name: 'SendGrid',
