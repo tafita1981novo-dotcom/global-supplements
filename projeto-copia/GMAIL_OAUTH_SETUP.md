@@ -1,15 +1,22 @@
 # 📧 Gmail OAuth Setup Guide
 
-## ✅ Step 1: Save OAuth Credentials (DONE!)
+## ✅ Step 1: Save OAuth Credentials SECURELY (Server-Side)
 
-You've already created the OAuth Client in Google Cloud Console. Now save these credentials in Replit Secrets:
+You've created the OAuth Client in Google Cloud Console. Now save these credentials **securely in Supabase Edge Functions** (NOT in frontend env vars!):
 
-### **Go to Replit Secrets and add:**
+### **Go to Supabase Dashboard:**
+1. Open: https://supabase.com/dashboard/project/twglceexfetejawoumsr/functions
+2. Click on `gmail-oauth-sender` function
+3. Go to **"Secrets"** tab
+4. Add these secrets:
 
 ```env
-VITE_GMAIL_CLIENT_ID=81144435101-t16ikl0nf3r5dnh0v7eot2e9u2l7164l.apps.googleusercontent.com
-VITE_GMAIL_CLIENT_SECRET=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
+GMAIL_CLIENT_ID=your_client_id_here.apps.googleusercontent.com
+GMAIL_CLIENT_SECRET=your_client_secret_here
+GMAIL_REFRESH_TOKEN=your_refresh_token_here (step 2 below)
 ```
+
+⚠️ **CRITICAL SECURITY:** Credentials are stored SERVER-SIDE in Supabase Edge Function secrets, NEVER exposed to browser!
 
 ---
 
@@ -22,8 +29,8 @@ To send emails via Gmail API, you need a **Refresh Token**. Follow these steps:
 
 ### **2.2 Configure Settings (⚙️ icon top-right):**
 - ✅ Check "Use your own OAuth credentials"
-- Paste your **Client ID**: `81144435101-t16ikl0nf3r5dnh0v7eot2e9u2l7164l.apps.googleusercontent.com`
-- Paste your **Client Secret**: `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`
+- Paste your **Client ID** from Google Cloud Console
+- Paste your **Client Secret** from Google Cloud Console
 
 ### **2.3 Select Gmail API Scopes:**
 In "Step 1 - Select & authorize APIs":
@@ -35,35 +42,47 @@ In "Step 1 - Select & authorize APIs":
 
 ### **2.4 Exchange Authorization Code:**
 - Click **"Exchange authorization code for tokens"**
-- Copy the **Refresh Token** (looks like `1//0g...`)
+- Copy the **Refresh Token** (long string starting with `1//0g...`)
 
-### **2.5 Save Refresh Token in Replit Secrets:**
+### **2.5 Save Refresh Token in Supabase:**
+Go back to Supabase Dashboard > gmail-oauth-sender > Secrets and add:
 ```env
-VITE_GMAIL_REFRESH_TOKEN=1//0gYourRefreshTokenHere...
+GMAIL_REFRESH_TOKEN=your_refresh_token_here
 ```
+
+⚠️ **SECURITY:** Never share or commit your refresh token! It stays secure in Supabase server-side.
 
 ---
 
-## ✅ Step 3: Verify Configuration
+## ✅ Step 3: Deploy Edge Function
 
-After saving all 3 credentials in Replit Secrets, check the Credentials Manager:
+After adding all 3 secrets in Supabase, deploy the function:
 
-1. Go to `/credentials-manager`
-2. You should see **3 green badges** for Gmail:
-   - ✅ Gmail OAuth Client ID
-   - ✅ Gmail OAuth Client Secret
-   - ✅ Gmail Refresh Token
+```bash
+cd projeto-copia
+npx supabase@beta functions deploy gmail-oauth-sender
+```
+
+Then verify it's running at:
+https://supabase.com/dashboard/project/twglceexfetejawoumsr/functions/gmail-oauth-sender
 
 ---
 
 ## 🚀 Step 4: Test Email Sending
 
-Once configured, the system will automatically use Gmail OAuth to send:
+Once the Edge Function is deployed with credentials, test it:
+
+1. Go to `/gmail-oauth-test` in your app
+2. Enter your email address
+3. Click "Send Test Email"
+4. Check your inbox for the test message!
+
+The system will now automatically send:
 - 📧 B2B buyer outreach emails
 - 📬 Automated follow-ups
 - 💰 Deal closing notifications
 
-All emails will be sent from **your Gmail account**, giving them maximum deliverability and authenticity!
+All emails sent from **your Gmail account** via secure server-side OAuth - maximum deliverability!
 
 ---
 

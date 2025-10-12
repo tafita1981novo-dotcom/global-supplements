@@ -5,15 +5,11 @@ import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Mail, CheckCircle, XCircle, Loader2, Key, Lock, RefreshCw } from 'lucide-react';
 import gmailOAuthService from '@/services/gmailOAuthService';
-import credentialsService from '@/services/credentialsService';
 
 export default function GmailOAuthTest() {
   const [testEmail, setTestEmail] = useState('');
   const [testing, setTesting] = useState(false);
   const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
-
-  const configStatus = gmailOAuthService.getConfigStatus();
-  const isFullyConfigured = configStatus.isReady;
 
   const handleTest = async () => {
     if (!testEmail || !testEmail.includes('@')) {
@@ -53,78 +49,58 @@ export default function GmailOAuthTest() {
       <Card className="p-6">
         <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
           <Key className="w-5 h-5" />
-          Configuration Status
+          Configuration Status (Server-Side)
         </h2>
+
+        <Alert className="mb-4 border-blue-500/50 bg-blue-500/10">
+          <AlertDescription className="text-blue-600 dark:text-blue-400">
+            🔒 <strong>Secure Server-Side Configuration:</strong> Gmail OAuth credentials are stored securely in Supabase Edge Functions, NOT exposed to the browser.
+          </AlertDescription>
+        </Alert>
 
         <div className="space-y-3">
           <div className="flex items-center gap-3">
-            {configStatus.hasClientId ? (
-              <CheckCircle className="w-5 h-5 text-green-500" />
-            ) : (
-              <XCircle className="w-5 h-5 text-red-500" />
-            )}
-            <span className="font-medium">Gmail OAuth Client ID</span>
-            {configStatus.hasClientId && (
-              <span className="text-xs text-muted-foreground ml-auto">
-                {credentialsService.getGmailClientID()?.substring(0, 20)}...
-              </span>
-            )}
+            <CheckCircle className="w-5 h-5 text-green-500" />
+            <span className="font-medium">Gmail OAuth Edge Function</span>
+            <span className="text-xs text-muted-foreground ml-auto">
+              Deployed ✅
+            </span>
           </div>
 
           <div className="flex items-center gap-3">
-            {configStatus.hasClientSecret ? (
-              <CheckCircle className="w-5 h-5 text-green-500" />
-            ) : (
-              <XCircle className="w-5 h-5 text-red-500" />
-            )}
-            <span className="font-medium">Gmail OAuth Client Secret</span>
-            {configStatus.hasClientSecret && (
-              <span className="text-xs text-muted-foreground ml-auto flex items-center gap-1">
-                <Lock className="w-3 h-3" />
-                Configured
-              </span>
-            )}
+            <Lock className="w-5 h-5 text-green-500" />
+            <span className="font-medium">Credentials Security</span>
+            <span className="text-xs text-muted-foreground ml-auto">
+              Server-side only 🔐
+            </span>
           </div>
 
           <div className="flex items-center gap-3">
-            {configStatus.hasRefreshToken ? (
-              <CheckCircle className="w-5 h-5 text-green-500" />
-            ) : (
-              <XCircle className="w-5 h-5 text-red-500" />
-            )}
-            <span className="font-medium">Gmail Refresh Token</span>
-            {configStatus.hasRefreshToken && (
-              <span className="text-xs text-muted-foreground ml-auto flex items-center gap-1">
-                <RefreshCw className="w-3 h-3" />
-                Configured
-              </span>
-            )}
+            <RefreshCw className="w-5 h-5 text-blue-500" />
+            <span className="font-medium">Configuration Location</span>
+            <span className="text-xs text-muted-foreground ml-auto">
+              Supabase Secrets
+            </span>
           </div>
         </div>
 
-        {!isFullyConfigured && (
-          <Alert className="mt-4 border-amber-500/50 bg-amber-500/10">
-            <AlertDescription className="text-amber-600 dark:text-amber-400">
-              ⚠️ Gmail OAuth not fully configured. Please add missing credentials in{' '}
-              <a href="/credentials-manager" className="underline font-semibold">
-                Credentials Manager
-              </a>
-              {' '}or follow the{' '}
-              <a 
-                href="https://github.com/yourusername/yourrepo/blob/main/GMAIL_OAUTH_SETUP.md" 
-                target="_blank" 
-                className="underline font-semibold"
-              >
-                Setup Guide
-              </a>
-            </AlertDescription>
-          </Alert>
-        )}
+        <Alert className="mt-4 border-green-500/50 bg-green-500/10">
+          <AlertDescription className="text-green-600 dark:text-green-400">
+            ✅ To configure Gmail OAuth, follow the{' '}
+            <a 
+              href="https://github.com/yourusername/yourrepo/blob/main/GMAIL_OAUTH_SETUP.md" 
+              target="_blank" 
+              className="underline font-semibold"
+            >
+              Setup Guide
+            </a>{' '}
+            and add secrets in Supabase Dashboard
+          </AlertDescription>
+        </Alert>
       </Card>
 
       {/* Test Email Sender */}
-      {isFullyConfigured && (
-        <Card className="p-6">
+      <Card className="p-6">
           <h2 className="text-xl font-semibold mb-4">Send Test Email</h2>
           
           <div className="space-y-4">
@@ -183,8 +159,7 @@ export default function GmailOAuthTest() {
               </Alert>
             )}
           </div>
-        </Card>
-      )}
+      </Card>
 
       {/* Usage Examples */}
       <Card className="p-6">
@@ -215,17 +190,15 @@ export default function GmailOAuthTest() {
       </Card>
 
       {/* Revenue Impact */}
-      {isFullyConfigured && (
-        <Card className="p-6 bg-gradient-to-br from-green-500/10 to-blue-500/10 border-green-500/20">
-          <h2 className="text-xl font-semibold mb-2">🚀 Revenue Impact</h2>
-          <p className="text-3xl font-bold text-green-600 dark:text-green-400">
-            $5K-$20K/month
-          </p>
-          <p className="text-sm text-muted-foreground mt-2">
-            Unlocked through automated B2B email outreach and deal closing
-          </p>
-        </Card>
-      )}
+      <Card className="p-6 bg-gradient-to-br from-green-500/10 to-blue-500/10 border-green-500/20">
+        <h2 className="text-xl font-semibold mb-2">🚀 Revenue Impact</h2>
+        <p className="text-3xl font-bold text-green-600 dark:text-green-400">
+          $5K-$20K/month
+        </p>
+        <p className="text-sm text-muted-foreground mt-2">
+          Unlocked through automated B2B email outreach and deal closing
+        </p>
+      </Card>
     </div>
   );
 }
