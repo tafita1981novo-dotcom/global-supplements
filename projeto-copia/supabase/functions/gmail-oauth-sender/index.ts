@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -14,8 +15,9 @@ interface EmailRequest {
 }
 
 /**
- * Gmail OAuth Sender - Server-Side Edge Function
- * Securely handles Gmail OAuth and sends emails without exposing credentials to frontend
+ * Gmail OAuth Sender - Server-Side Edge Function (AUTHENTICATED)
+ * Securely handles Gmail OAuth and sends emails
+ * Requires valid Supabase authentication to prevent abuse
  */
 serve(async (req) => {
   // Handle CORS preflight
@@ -24,6 +26,34 @@ serve(async (req) => {
   }
 
   try {
+    // 🔒 SECURITY: Verify Supabase authentication
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Unauthorized: Missing authorization header' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+      );
+    }
+
+    // Verify JWT token
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Unauthorized: Invalid authentication token' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+      );
+    }
+
+    // User is authenticated, proceed with email sending
+    console.log(`📧 Authenticated email request from user: ${user.email}`);
     // Get OAuth credentials from server environment (NOT VITE_ vars!)
     const clientId = Deno.env.get('GMAIL_CLIENT_ID');
     const clientSecret = Deno.env.get('GMAIL_CLIENT_SECRET');

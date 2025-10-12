@@ -1,8 +1,10 @@
 /**
  * Gmail OAuth Service (Frontend)
- * Calls secure server-side Edge Function to send emails
+ * Calls secure authenticated Edge Function to send emails
  * Credentials are NEVER exposed to the browser
  */
+
+import { supabase } from '@/integrations/supabase/client';
 
 interface EmailOptions {
   to: string;
@@ -13,6 +15,14 @@ interface EmailOptions {
 
 class GmailOAuthService {
   private readonly EDGE_FUNCTION_URL = 'https://twglceexfetejawoumsr.supabase.co/functions/v1/gmail-oauth-sender';
+
+  /**
+   * Get authenticated session token
+   */
+  private async getAuthToken(): Promise<string | null> {
+    const { data: { session } } = await supabase.auth.getSession();
+    return session?.access_token || null;
+  }
 
   /**
    * Check if Gmail OAuth is configured (server-side)
@@ -55,14 +65,24 @@ class GmailOAuthService {
   }
 
   /**
-   * Send email via secure Edge Function
+   * Send email via secure authenticated Edge Function
    */
   async sendEmail(options: EmailOptions): Promise<{ success: boolean; messageId?: string; error?: string }> {
     try {
+      const authToken = await this.getAuthToken();
+      
+      if (!authToken) {
+        return {
+          success: false,
+          error: 'User not authenticated. Please login to send emails.'
+        };
+      }
+
       const response = await fetch(this.EDGE_FUNCTION_URL, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
         },
         body: JSON.stringify(options)
       });
