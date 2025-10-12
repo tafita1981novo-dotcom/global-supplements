@@ -35,11 +35,14 @@ jobs:
         with:
           node-version: '18'
           cache: 'npm'
+          cache-dependency-path: 'projeto-copia/package-lock.json'
       
       - name: Instalar dependências
+        working-directory: ./projeto-copia
         run: npm ci
       
       - name: Build do projeto
+        working-directory: ./projeto-copia
         run: npm run build
       
       - name: Deploy via FTP para Hostinger
@@ -49,7 +52,7 @@ jobs:
           username: u930134944
           password: ${{ secrets.FTP_PASSWORD }}
           port: 21
-          local-dir: ./dist/
+          local-dir: ./projeto-copia/dist/
           server-dir: /public_html/
           dangerous-clean-slate: false
           exclude: |
