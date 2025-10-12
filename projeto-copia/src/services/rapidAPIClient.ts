@@ -1,5 +1,3 @@
-import { allPremiumProducts } from '../data/premiumProducts';
-
 export interface RapidAPIConfig {
   key: string;
   host: string;
@@ -25,8 +23,8 @@ export class MultiAPIClient {
 
   async searchProducts(query: string, limit: number = 50, countryCode: string = 'US', domain: string = 'amazon.com', sortBy: string = 'RELEVANCE'): Promise<any[]> {
     if (this.apis.length === 0) {
-      console.warn('No RapidAPI keys configured, returning demo data');
-      return this.getDemoProducts();
+      console.error('❌ No RapidAPI keys configured! Cannot fetch real Amazon products.');
+      return [];
     }
 
     let attempts = 0;
@@ -56,8 +54,38 @@ export class MultiAPIClient {
       }
     }
 
-    console.error('All APIs failed or reached limits, using demo data');
-    return this.getDemoProducts();
+    console.error('❌ All APIs failed or reached limits. Fetching from Supabase fallback...');
+    
+    // FALLBACK: Buscar dados reais do Supabase (previamente ingeridos)
+    try {
+      const { createClient } = await import('@/integrations/supabase/client');
+      const supabase = createClient();
+      
+      const { data, error } = await supabase
+        .from('opportunities')
+        .select('*')
+        .eq('metadata->>marketplace', countryCode)
+        .limit(limit);
+      
+      if (!error && data && data.length > 0) {
+        console.log(`✅ Loaded ${data.length} real products from Supabase cache`);
+        return data.map(opp => ({
+          asin: opp.metadata?.asin || '',
+          title: opp.product_name,
+          price: `$${opp.price_per_unit.toFixed(2)}`,
+          rating: opp.reliability_score || 4.5,
+          reviews: opp.metadata?.reviews || 0,
+          image: opp.metadata?.image || '',
+          category: opp.category,
+          prime: opp.metadata?.prime || false,
+          affiliateLink: opp.metadata?.affiliate_link || ''
+        }));
+      }
+    } catch (fallbackError) {
+      console.error('Supabase fallback failed:', fallbackError);
+    }
+    
+    return [];
   }
 
   private async fetchFromAPI(api: RapidAPIConfig, query: string, limit: number, countryCode: string = 'US', domain: string = 'amazon.com', sortBy: string = 'RELEVANCE'): Promise<any[]> {
@@ -192,10 +220,5 @@ export class MultiAPIClient {
       used: this.requestCounts.get(api.name) || 0,
       remaining: this.MAX_FREE_REQUESTS - (this.requestCounts.get(api.name) || 0)
     }));
-  }
-
-  private getDemoProducts(): any[] {
-    // Return premium products from our curated database (300+ products)
-    return allPremiumProducts || [];
   }
 }

@@ -64,6 +64,7 @@ import Amazon from "./pages/Amazon";
 import AIContentGenerator from "./pages/AIContentGenerator";
 import GoogleAdsCampaignsPage from "./pages/GoogleAdsCampaigns";
 import MarketingDashboard from "./pages/MarketingDashboard";
+import BrokerDashboard from "./pages/broker/BrokerDashboard";
 
 const queryClient = new QueryClient();
 
@@ -278,6 +279,11 @@ const App = () => (
               <Route path="/marketing-dashboard" element={
                 <AppLayout>
                   <MarketingDashboard />
+                </AppLayout>
+              } />
+              <Route path="/broker-dashboard" element={
+                <AppLayout>
+                  <BrokerDashboard />
                 </AppLayout>
               } />
               
