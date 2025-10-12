@@ -55,9 +55,21 @@ The backend is primarily built on Supabase, providing authentication, a PostgreS
 -   **Document Management**: Supabase storage for company certificates, FDA approvals, quality certifications, patents, insurance, and tax documents.
 -   **Marketing Automation APIs**: Buffer (social media scheduling), SendGrid (email service provider), Google Search Console (SEO data).
 
+## 📦 Recent Changes
+
+### 2025-10-12: Project Recovery & Security Fix
+- ✅ **projeto-copia folder successfully recovered** (436 files intact)
+- ✅ **Both sites operational**: / (main site) and /amazon (affiliate store)
+- ✅ **Security fix**: Removed unsafe OpenAI API usage from frontend (`aiProductValidator.ts`)
+  - Moved from direct frontend API calls to fallback validation logic
+  - Prevents API key exposure in browser bundle
+  - Site now loads without console errors
+- ✅ **Real-Time Amazon Data API working**: 23 products loading successfully
+- ✅ **Workflow configured**: `cd projeto-copia && npm start` serving on port 5000
+
 ## 🚨 CRITICAL: Sistema 100% Dados Reais - ZERO Mock Data
 
-**Última Atualização:** 2025-10-09
+**Última Atualização:** 2025-10-12
 
 ### Configuração Supabase Cloud (PRODUCTION)
 - **URL:** `https://twglceexfetejawoumsr.supabase.co`
