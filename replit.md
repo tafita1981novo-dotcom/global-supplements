@@ -66,6 +66,12 @@ The backend is primarily built on Supabase, providing authentication, a PostgreS
   - Site now loads without console errors
 - ✅ **Real-Time Amazon Data API working**: 23 products loading successfully
 - ✅ **Workflow configured**: `cd projeto-copia && npm start` serving on port 5000
+- ✅ **GitHub Actions workflow corrected**: `.github/workflows/deploy-hostinger.yml`
+  - Fixed build path to `projeto-copia/`
+  - Automatic deploy on push to main (16x/day scheduled)
+  - FTP deploy to Hostinger /public_html/
+- ✅ **Pushed to GitHub**: 407 objects (6.79 MiB) - commit 2f32bb1
+- ✅ **Deploy in progress**: GitHub Actions running automatic deployment
 
 ## 🚨 CRITICAL: Sistema 100% Dados Reais - ZERO Mock Data
 
