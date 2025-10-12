@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS automation_runs (
 );
 
 -- ========================================
--- COMMISSION PAYMENTS TABLE
+-- COMMISSION PAYMENTS TABLE (PAYONEER ONLY)
 -- ========================================
 CREATE TABLE IF NOT EXISTS commission_payments (
   id SERIAL PRIMARY KEY,
@@ -59,12 +59,14 @@ CREATE TABLE IF NOT EXISTS commission_payments (
   deal_value DECIMAL(12,2),
   commission_rate DECIMAL(5,2),
   commission_amount DECIMAL(12,2),
-  payment_method VARCHAR(50), -- 'payoneer' or 'mercury_bank'
+  payment_method VARCHAR(50) DEFAULT 'payoneer', -- Always 'payoneer'
   payment_status VARCHAR(50) DEFAULT 'pending', -- pending, processing, completed, failed
-  payoneer_id VARCHAR(255),
-  mercury_account_id VARCHAR(255),
+  payoneer_id VARCHAR(255) DEFAULT '99133638', -- Conta Payoneer fixa
+  payment_currency VARCHAR(10) DEFAULT 'USD',
   payment_date TIMESTAMPTZ,
   confirmation_code VARCHAR(255),
+  supplier_payoneer_email VARCHAR(255),
+  notes TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
