@@ -133,7 +133,12 @@ class AutonomousNegotiator {
     const conversationHistory = context.conversation_history || { total_conversations: 0, all_negotiations: [] };
     
     return `
-🏢 YOUR COMPANY INFORMATION (Global Supplements):
+🏢 YOUR COMPANY INFORMATION:
+Legal Name: ${companyData.legal_name}
+Trade Name: ${companyData.trade_name}
+EIN: ${companyData.legal_info.ein}
+Address: ${companyData.address.full_address}
+Complete Details:
 ${JSON.stringify(companyData, null, 2)}
 
 📊 NEGOTIATION CONTEXT:
@@ -167,8 +172,8 @@ ${context.preferred_channel || 'email'} ${context.api_available ? '(API availabl
 
 📝 INSTRUCTIONS:
 Generate a professional, strategic response that:
-1. Represents Global Supplements LLC (Florida, USA - EIN: ${companyData.legal_info.ein})
-2. Uses our complete company credentials (certifications, registrations, etc.)
+1. Represents ${companyData.legal_name} (Trade Name: ${companyData.trade_name}) - EIN: ${companyData.legal_info.ein}, ${companyData.address.full_address}
+2. Uses our complete company credentials (certifications, registrations, owner: ${companyData.legal_info.legal_owner})
 3. Advances the negotiation toward a profitable deal with ZERO INVESTMENT RISK
 4. Addresses the buyer's specific needs and concerns
 5. Uses appropriate negotiation tactics for the current stage
