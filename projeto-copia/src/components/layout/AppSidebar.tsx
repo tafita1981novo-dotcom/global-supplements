@@ -419,6 +419,11 @@ export function AppSidebar() {
       url: "/credentials-manager",
     },
     {
+      title: "⚡ Config 100 Fontes RFQ",
+      icon: Zap,
+      url: "/config-credentials",
+    },
+    {
       title: "📧 Gmail OAuth Test",
       icon: Mail,
       url: "/gmail-oauth-test",
