@@ -965,17 +965,26 @@ const Amazon = () => {
         }
         
         // 🧠 PROCESSAMENTO INTELIGENTE: Detecta mudanças e economiza requisições
-        const processed = productMonitor.processNewProducts(
-          filteredProducts,
-          monitorKey,
-          selectedCategory,
-          selectedSubcategory
-        );
+        // MAS para buscas customizadas, usa produtos direto sem cache!
+        let finalProductsList: any[];
         
-        let finalProductsList = processed.products;
+        if (customSearchQuery) {
+          // Busca customizada: usa produtos direto, sem cache do monitor
+          console.log(`🔎 Busca customizada: usando ${filteredProducts.length} produtos direto (sem cache monitor)`);
+          finalProductsList = filteredProducts;
+        } else {
+          // Busca normal: usa sistema inteligente de cache
+          const processed = productMonitor.processNewProducts(
+            filteredProducts,
+            monitorKey,
+            selectedCategory,
+            selectedSubcategory
+          );
+          finalProductsList = processed.products;
+        }
         
-        // ⚠️ GARANTIA DE MÍNIMO: Se tem menos de 20 produtos, busca mais
-        if (finalProductsList.length < 20 && processed.needsMore) {
+        // ⚠️ GARANTIA DE MÍNIMO: Se tem menos de 20 produtos, busca mais (não para buscas customizadas)
+        if (!customSearchQuery && finalProductsList.length < 20) {
           console.log(`⚠️ Apenas ${finalProductsList.length}/20 produtos - buscando mais...`);
           
           try {
@@ -1038,7 +1047,6 @@ const Amazon = () => {
         const finalProducts = sorted.slice(0, 40);
         
         console.log(`📦 ${finalProducts.length} produtos (${finalProducts[0]?.reviews || 0} reviews no topo)`);
-        console.log(`💡 Economia: ${processed.stats.apiCallsAvoided} requisições evitadas`);
         
         // 🛡️ Só atualiza se esta requisição ainda é a mais recente
         if (thisRequestId === searchFetchRequestId.current) {
