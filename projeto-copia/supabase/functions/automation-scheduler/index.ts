@@ -33,7 +33,7 @@ serve(async (req) => {
     console.log(`🤖 AUTOMATION SCHEDULER: ${action}`);
 
     // ============================================
-    // PIPELINE COMPLETO DE AUTOMAÇÃO
+    // PIPELINE CORRETO: RFQ → SUPPLIER MATCHING → NEGOTIATION
     // ============================================
     if (action === 'run_full_pipeline') {
       const results = {
@@ -41,62 +41,85 @@ serve(async (req) => {
         steps: []
       };
 
-      // STEP 1: Ingestão de dados Amazon
-      console.log('📥 Step 1: Ingesting Amazon data...');
+      // STEP 1: BUSCAR RFQs REAIS DE COMPRADORES (IndiaMART)
+      console.log('🇮🇳 Step 1: Fetching real buyer RFQs from IndiaMART...');
       try {
-        const ingestResponse = await fetch(`${supabaseUrl}/functions/v1/real-data-ingestion`, {
+        const rfqResponse = await fetch(`${supabaseUrl}/functions/v1/indiamart-rfq-detector`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${supabaseKey}`,
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({
-            action: 'ingest_amazon',
-            params: {
-              query: 'supplements vitamins protein',
-              country: 'US',
-              limit: 50
-            }
+          body: JSON.stringify({ 
+            action: 'fetch_indiamart_leads',
+            params: {} 
           })
         });
-        const ingestData = await ingestResponse.json();
+        const rfqData = await rfqResponse.json();
         results.steps.push({
           step: 1,
-          name: 'Amazon Data Ingestion',
-          status: ingestData.success ? 'success' : 'failed',
-          data: ingestData
+          name: 'IndiaMART RFQ Detection',
+          status: rfqData.success ? 'success' : 'failed',
+          data: rfqData
         });
       } catch (error: any) {
         results.steps.push({
           step: 1,
-          name: 'Amazon Data Ingestion',
+          name: 'IndiaMART RFQ Detection',
           status: 'error',
           error: error.message
         });
       }
 
-      // STEP 2: Detecção de B2B Buyers
-      console.log('🎯 Step 2: Detecting B2B buyers...');
+      // STEP 2: BUSCAR FORNECEDORES GLOBAIS (Para cada RFQ)
+      console.log('🌍 Step 2: Finding global suppliers for RFQs...');
       try {
-        const buyerResponse = await fetch(`${supabaseUrl}/functions/v1/real-data-ingestion`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${supabaseKey}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ action: 'detect_buyers' })
-        });
-        const buyerData = await buyerResponse.json();
+        const { data: buyers } = await supabase
+          .from('b2b_buyers')
+          .select('*')
+          .eq('contact_status', 'rfq_detected')
+          .limit(10);
+
+        let suppliersMatched = 0;
+        
+        for (const buyer of buyers || []) {
+          const productNeeded = buyer.product_needs?.[0] || '';
+          const budgetStr = buyer.budget_range || '0';
+          const maxPrice = parseFloat(budgetStr.replace(/[^0-9.]/g, '')) || 0;
+
+          const supplierResponse = await fetch(`${supabaseUrl}/functions/v1/global-supplier-finder`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${supabaseKey}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              action: 'search_suppliers',
+              params: {
+                productName: productNeeded,
+                maxPrice: maxPrice > 0 ? maxPrice : undefined,
+                maxDeliveryDays: 30,
+                country: buyer.country
+              }
+            })
+          });
+
+          const supplierData = await supplierResponse.json();
+          if (supplierData.success && supplierData.suppliers?.length > 0) {
+            suppliersMatched++;
+          }
+        }
+
         results.steps.push({
           step: 2,
-          name: 'B2B Buyer Detection',
-          status: buyerData.success ? 'success' : 'failed',
-          data: buyerData
+          name: 'Global Supplier Matching',
+          status: 'success',
+          data: { buyers_processed: buyers?.length || 0, suppliers_matched: suppliersMatched }
         });
       } catch (error: any) {
         results.steps.push({
           step: 2,
-          name: 'B2B Buyer Detection',
+          name: 'Global Supplier Matching',
           status: 'error',
           error: error.message
         });
