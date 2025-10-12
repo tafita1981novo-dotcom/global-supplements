@@ -119,8 +119,13 @@ class CredentialsService {
   }
 
   // ============ PAYMENT & FINANCIAL ============
+  getStripePublicKey(): string | undefined {
+    return import.meta.env.VITE_STRIPE_PUBLIC_KEY;
+  }
+
+  // Note: Stripe Secret Key is server-side only (not in VITE_ vars)
   getStripeSecretKey(): string | undefined {
-    return import.meta.env.VITE_STRIPE_SECRET_KEY;
+    return undefined; // Server-side only for security
   }
 
   getPayoneerID(): string | undefined {
@@ -296,13 +301,22 @@ class CredentialsService {
 
       // PAYMENT
       {
-        name: 'Stripe',
-        key: this.getStripeSecretKey(),
-        configured: !!this.getStripeSecretKey(),
+        name: 'Stripe Public Key',
+        key: this.getStripePublicKey(),
+        configured: !!this.getStripePublicKey(),
         category: 'payment',
         priority: 'high',
         setupUrl: 'https://dashboard.stripe.com/apikeys',
-        description: 'Payment Processing'
+        description: 'Stripe Frontend Key (pk_)'
+      },
+      {
+        name: 'Stripe Secret Key',
+        key: undefined, // Server-side only
+        configured: true, // Configured server-side
+        category: 'payment',
+        priority: 'high',
+        setupUrl: 'https://dashboard.stripe.com/apikeys',
+        description: 'Stripe Backend Key (sk_) - Server-side'
       },
       {
         name: 'Payoneer',
