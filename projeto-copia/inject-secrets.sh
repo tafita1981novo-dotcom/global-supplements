@@ -25,6 +25,11 @@ STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
 
 # Email Marketing - SendGrid (REAL - from Replit Secrets)
 VITE_SENDGRID_API_KEY=${SENDGRID_API_KEY}
+
+# Gmail OAuth (REAL - from Replit Secrets) - Server-side only
+GMAIL_CLIENT_ID=${GMAIL_CLIENT_ID}
+GMAIL_CLIENT_SECRET=${GMAIL_CLIENT_SECRET}
+GMAIL_REFRESH_TOKEN=${GMAIL_REFRESH_TOKEN}
 EOF
 
 echo "✅ Secrets injetadas com sucesso!"
