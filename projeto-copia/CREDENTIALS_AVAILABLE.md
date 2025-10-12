@@ -1,6 +1,6 @@
 # 🔑 TODAS AS CREDENCIAIS DISPONÍVEIS NO PROJETO
 
-## ✅ CREDENCIAIS JÁ CONFIGURADAS (8/25 - 32%)
+## ✅ CREDENCIAIS JÁ CONFIGURADAS (9/25 - 36%)
 
 ### 🏗️ INFRASTRUCTURE
 - **Supabase URL**: ✅ Configurado via environment
@@ -11,7 +11,7 @@
 - **OpenAI API Key**: ✅ Configurado via environment
   - Uso: GPT-4 Negotiations, Content Generation
   - Revenue Impact: $5K-$20K/month
-  - Localização: `inject-secrets.sh`, `.env`, `credentialsService.ts`
+  - Localização**: `inject-secrets.sh`, `.env`, `credentialsService.ts`
 
 - **Google Gemini**: ❌ Pendente
   - Setup: https://aistudio.google.com/app/apikey
@@ -38,12 +38,13 @@
 - **Localização**: `inject-secrets.sh`, `.env`, `credentialsService.ts`
 
 ### 📧 MARKETING & COMMUNICATION
-- **Gmail OAuth**: ⚠️ PARCIALMENTE CONFIGURADO
-  - ✅ Gmail Client ID
-  - ✅ Gmail Client Secret
-  - ❌ Gmail Refresh Token (precisa gerar via OAuth Playground)
-  - Revenue Impact: $5K-$15K/month (quando completo)
-  - Setup: Ver `GMAIL_OAUTH_SETUP.md`
+- **Gmail OAuth**: ✅ COMPLETO! (2025-10-12)
+  - ✅ Gmail Client ID: 811444354101-...
+  - ✅ Gmail Client Secret: G0CSPX-...
+  - ✅ Gmail Refresh Token: 1//04TXc4xksxPTb...
+  - Revenue Impact: $5K-$15K/month ✅ DESBLOQUEADO!
+  - Setup: OAuth completo via Google Cloud Console + OAuth Playground
+  - Email: globalsuplements.official@gmail.com
   
 - **SendGrid API**: ✅ CONFIGURADO (2025-10-12)
   - Key: SG.VI7Y... ✅
@@ -128,6 +129,8 @@ const sendgrid = import.meta.env.VITE_SENDGRID_API_KEY;
 ```typescript
 // These are NOT in VITE_ vars for security
 const stripeSecret = process.env.STRIPE_SECRET_KEY; // sk_live_...
+const gmailClientId = process.env.GMAIL_CLIENT_ID;
+const gmailSecret = process.env.GMAIL_CLIENT_SECRET;
 const gmailRefresh = process.env.GMAIL_REFRESH_TOKEN;
 ```
 
@@ -141,6 +144,7 @@ const gmailRefresh = process.env.GMAIL_REFRESH_TOKEN;
    - RapidAPI ✅ JÁ TEM
    - Stripe ✅ JÁ TEM (ambas keys - LIVE em produção!)
    - SendGrid ✅ JÁ TEM
+   - Gmail OAuth ✅ JÁ TEM (COMPLETO!)
    - Company Info ✅ JÁ TEM
    - Supabase ✅ JÁ TEM
 
@@ -151,7 +155,7 @@ const gmailRefresh = process.env.GMAIL_REFRESH_TOKEN;
    - Use environment variables
 
 4. **NÃO exponha secrets server-side**
-   - Stripe Secret (sk_live_), Gmail Refresh Token = server-side ONLY
+   - Stripe Secret (sk_live_), Gmail OAuth = server-side ONLY
 
 ### ✅ SEMPRE FAÇA ISSO:
 1. **Use credentialsService** para TUDO
@@ -164,26 +168,26 @@ const gmailRefresh = process.env.GMAIL_REFRESH_TOKEN;
 
 ## 📊 STATUS ATUAL (ATUALIZADO 2025-10-12)
 
-- **Configuradas**: 8/25 (32%)
-- **Parcialmente Configuradas**: 1 (Gmail OAuth - falta Refresh Token)
-- **Críticas Faltando**: 2 (Gmail Refresh Token, Payoneer)
+- **Configuradas**: 9/25 (36%) - UP from 32%!
+- **Críticas Faltando**: 1 (Payoneer)
 - **High Priority Faltando**: 2 (LinkedIn, AliExpress)
-- **Potencial Desbloqueado**: $30K+/mês
-- **Potencial Bloqueado**: $55K+/mês
+- **Potencial Desbloqueado**: $35K-$63K/mês ✅
+- **Potencial Bloqueado**: $67K+/mês
 
 ### ✅ ÚLTIMAS CONFIGURAÇÕES (2025-10-12):
 - ✅ SendGrid API Key configurado
 - ✅ Stripe Public Key (pk_test_) configurado  
 - ✅ Stripe Secret Key (sk_live_) configurado - **PRODUÇÃO ATIVA!**
+- ✅ Gmail OAuth COMPLETO (Client ID + Secret + Refresh Token) - **EMAIL OUTREACH ATIVO!**
 
 ---
 
 ## 🚀 PRÓXIMOS PASSOS (PRIORIDADE)
 
-1. **Gmail Refresh Token** → Completar OAuth → $5K-$15K/mês
-2. **Payoneer ID** → Desbloquear pagamentos internacionais → $50K+
-3. **LinkedIn Credentials** → B2B detection → $2K-$10K/mês
-4. **AliExpress Keys** → Dropshipping automation → $5K-$20K/mês
+1. **Payoneer ID** → Desbloquear pagamentos internacionais → $50K+
+2. **LinkedIn Credentials** → B2B detection → $2K-$10K/mês
+3. **AliExpress Keys** → Dropshipping automation → $5K-$20K/mês
+4. **Alibaba Keys** → B2B marketplace → $10K-$30K/mês
 
 ---
 
