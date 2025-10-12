@@ -57,25 +57,27 @@ The backend is primarily built on Supabase, providing authentication, a PostgreS
 
 ## 📦 Recent Changes
 
-### 2025-10-12: Project Recovery, Security Fix & Deploy Corrections
+### 2025-10-12: Project Recovery, Security Fix & Complete Deploy Corrections
 - ✅ **projeto-copia folder successfully recovered** (436 files intact)
 - ✅ **Both sites operational**: / (main site) and /amazon (affiliate store)
 - ✅ **Security fix**: Removed unsafe OpenAI API usage from frontend (`aiProductValidator.ts`)
   - Moved from direct frontend API calls to fallback validation logic
   - Prevents API key exposure in browser bundle
   - Site now loads without console errors
-- ✅ **Real-Time Amazon Data API working**: 23 products loading successfully
+- ✅ **Real-Time Amazon Data API working**: 40 products loading successfully with cache
 - ✅ **Workflow configured**: `cd projeto-copia && npm start` serving on port 5000
 - ✅ **GitHub Actions workflow corrected**: `.github/workflows/deploy-hostinger.yml`
   - Fixed build path to `projeto-copia/`
   - Automatic deploy on push to main (16x/day scheduled)
   - FTP deploy to Hostinger /public_html/
-- ✅ **Replit Deploy fix**: Removed duplicate index.html from root directory
-  - Vite build was failing because root index.html referenced /src/main.tsx (doesn't exist at root)
-  - Build command runs in projeto-copia/ subdirectory with correct index.html
-  - Deploy now resolves correct entry point: projeto-copia/index.html → projeto-copia/src/main.tsx
-- ✅ **Pushed to GitHub**: Multiple successful pushes (commits f758c9a, 526c0a3, d1c180e, 4a482a8)
-- ✅ **Deploys active**: GitHub Actions deploying to Hostinger automatically
+- ✅ **Replit Deploy fix (complete)**: Removed all duplicate config files from root
+  - Issue 1: Duplicate index.html removed from root
+  - Issue 2: Duplicate vite.config.ts, tsconfig.json, package.json removed from root
+  - Vite now correctly uses configs from projeto-copia/ subdirectory only
+  - Build validated locally: 22-27s, 2858 modules, dist/ created successfully
+  - Deploy ready: Build command runs in projeto-copia/ with correct entry point
+- ✅ **Pushed to GitHub**: 6 successful pushes (commits 35d8981, 87f25da, 3bcfe12, f758c9a, 526c0a3, d1c180e, 4a482a8)
+- ✅ **Deploys active**: GitHub Actions deploying to Hostinger automatically, Replit Deploy ready
 
 ## 🚨 CRITICAL: Sistema 100% Dados Reais - ZERO Mock Data
 
