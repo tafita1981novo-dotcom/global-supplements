@@ -89,9 +89,6 @@ class CredentialsService {
     return undefined; // Server-side only in Supabase secrets
   }
 
-  getSendGridAPIKey(): string | undefined {
-    return import.meta.env.VITE_SENDGRID_API_KEY;
-  }
 
   getBufferAccessToken(): string | undefined {
     return import.meta.env.VITE_BUFFER_ACCESS_TOKEN;
@@ -123,9 +120,14 @@ class CredentialsService {
     return import.meta.env.VITE_STRIPE_PUBLIC_KEY;
   }
 
-  // Note: Stripe Secret Key is server-side only (not in VITE_ vars)
+  // Note: Stripe Secret Key is server-side only (accessible via process.env in Edge Functions)
+  // This returns undefined in client-side code for security
   getStripeSecretKey(): string | undefined {
-    return undefined; // Server-side only for security
+    return undefined; // Server-side only - use process.env.STRIPE_SECRET_KEY in Edge Functions
+  }
+
+  getSendGridApiKey(): string | undefined {
+    return import.meta.env.VITE_SENDGRID_API_KEY;
   }
 
   getPayoneerID(): string | undefined {
@@ -264,8 +266,8 @@ class CredentialsService {
       },
       {
         name: 'SendGrid',
-        key: this.getSendGridAPIKey(),
-        configured: !!this.getSendGridAPIKey(),
+        key: this.getSendGridApiKey(),
+        configured: !!this.getSendGridApiKey(),
         category: 'marketing',
         priority: 'medium',
         setupUrl: 'https://app.sendgrid.com/settings/api_keys',
@@ -311,12 +313,12 @@ class CredentialsService {
       },
       {
         name: 'Stripe Secret Key',
-        key: undefined, // Server-side only
-        configured: true, // Configured server-side
+        key: undefined, // Server-side only - never exposed to client
+        configured: !!this.getStripePublicKey(), // If public key exists, secret key should too
         category: 'payment',
         priority: 'high',
         setupUrl: 'https://dashboard.stripe.com/apikeys',
-        description: 'Stripe Backend Key (sk_) - Server-side'
+        description: 'Stripe Backend Key (sk_) - Server-side only'
       },
       {
         name: 'Payoneer',

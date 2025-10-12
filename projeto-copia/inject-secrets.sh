@@ -18,9 +18,19 @@ VITE_COMPANY_NAME=Rafael Roberto Rodrigues de Oliveira Consultoria em Tecnologia
 VITE_COMPANY_EIN=33-3939483
 VITE_COMPANY_ADDRESS=6200 Metrowest, Orlando, FL 32385, USA
 VITE_TRADE_NAME=Global Supplements - Premium Worldwide Network
+
+# Payment Processing - Stripe (REAL - from Replit Secrets)
+VITE_STRIPE_PUBLIC_KEY=${STRIPE_PUBLIC_KEY}
+STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+
+# Email Marketing - SendGrid (REAL - from Replit Secrets)
+VITE_SENDGRID_API_KEY=${SENDGRID_API_KEY}
 EOF
 
 echo "✅ Secrets injetadas com sucesso!"
 echo "📋 Verificando configuração:"
 echo "  - RAPIDAPI_KEY: ${RAPIDAPI_KEY:0:20}..."
 echo "  - OPENAI_API_KEY: ${OPENAI_API_KEY:0:20}..."
+echo "  - STRIPE_PUBLIC_KEY: ${STRIPE_PUBLIC_KEY:0:20}..."
+echo "  - STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:0:20}..."
+echo "  - SENDGRID_API_KEY: ${SENDGRID_API_KEY:0:20}..."
