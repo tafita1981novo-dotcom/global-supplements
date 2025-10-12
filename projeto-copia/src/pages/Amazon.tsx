@@ -56,6 +56,7 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
 const Amazon = () => {
   const [products, setProducts] = useState<AmazonProduct[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [customSearchQuery, setCustomSearchQuery] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("beauty");
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
@@ -533,11 +534,20 @@ const Amazon = () => {
   const AFFILIATE_TAG = "globalsupleme-20";
 
   const handleSearchClick = () => {
-    setSelectedCategory("all");
-    setSelectedSubcategory(null);
+    if (searchTerm.trim()) {
+      setCustomSearchQuery(searchTerm.trim());
+      setSelectedCategory("all");
+      setSelectedSubcategory(null);
+    }
+  };
+
+  const handleCategoryChange = (category: string) => {
+    setSelectedCategory(category);
+    setCustomSearchQuery(null);
   };
 
   // Limpa subcategoria quando troca de categoria
+  // NÃO limpa customSearchQuery aqui pois ele é gerenciado pelo handleSearchClick
   useEffect(() => {
     setSelectedSubcategory(null);
   }, [selectedCategory]);
@@ -545,8 +555,8 @@ const Amazon = () => {
   // FetchKey estável para evitar loop de renderização
   // NÃO inclui globalProductsVersion para evitar re-triggering infinito
   const fetchKey = useMemo(() => {
-    return `${currentMarketplace.id}|${selectedCategory}|${selectedSubcategory || 'none'}`;
-  }, [currentMarketplace.id, selectedCategory, selectedSubcategory]);
+    return `${currentMarketplace.id}|${selectedCategory}|${selectedSubcategory || 'none'}|${customSearchQuery || 'default'}`;
+  }, [currentMarketplace.id, selectedCategory, selectedSubcategory, customSearchQuery]);
 
   useEffect(() => {
     // Só busca produtos depois que terminou de detectar localização
@@ -744,7 +754,11 @@ const Amazon = () => {
         // Determina a query de busca baseada na subcategoria selecionada ou categoria
         let searchQuery: string;
         
-        if (selectedSubcategory) {
+        if (customSearchQuery) {
+          // Se há busca customizada, usa o termo digitado pelo usuário
+          searchQuery = customSearchQuery;
+          console.log(`🔎 Busca customizada: "${searchQuery}"`);
+        } else if (selectedSubcategory) {
           // Se há subcategoria selecionada, usa o termo específico dela
           const subcategoryKey = selectedSubcategory.toLowerCase().trim();
           searchQuery = subcategorySearchTerms[subcategoryKey] || selectedSubcategory;
@@ -1061,7 +1075,7 @@ const Amazon = () => {
         onSearchChange={setSearchTerm}
         onSearch={handleSearchClick}
         selectedCategory={selectedCategory}
-        onCategoryChange={setSelectedCategory}
+        onCategoryChange={handleCategoryChange}
         categories={categories}
       />
 
