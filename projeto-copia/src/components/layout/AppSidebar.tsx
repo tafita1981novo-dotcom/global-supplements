@@ -419,6 +419,11 @@ export function AppSidebar() {
       url: "/credentials-manager",
     },
     {
+      title: "📧 Gmail OAuth Test",
+      icon: Mail,
+      url: "/gmail-oauth-test",
+    },
+    {
       title: "🔑 Setup de APIs",
       icon: Key,
       url: "/api-setup",

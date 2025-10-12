@@ -75,6 +75,18 @@ class CredentialsService {
     return import.meta.env.VITE_GMAIL_API_KEY;
   }
 
+  getGmailClientID(): string | undefined {
+    return import.meta.env.VITE_GMAIL_CLIENT_ID;
+  }
+
+  getGmailClientSecret(): string | undefined {
+    return import.meta.env.VITE_GMAIL_CLIENT_SECRET;
+  }
+
+  getGmailRefreshToken(): string | undefined {
+    return import.meta.env.VITE_GMAIL_REFRESH_TOKEN;
+  }
+
   getSendGridAPIKey(): string | undefined {
     return import.meta.env.VITE_SENDGRID_API_KEY;
   }
@@ -235,13 +247,31 @@ class CredentialsService {
 
       // MARKETING
       {
-        name: 'Gmail API',
-        key: this.getGmailAPIKey(),
-        configured: !!this.getGmailAPIKey(),
+        name: 'Gmail OAuth Client ID',
+        key: this.getGmailClientID(),
+        configured: !!this.getGmailClientID(),
         category: 'marketing',
         priority: 'critical',
-        setupUrl: 'https://console.cloud.google.com/apis/library/gmail.googleapis.com',
-        description: 'Email Automation'
+        setupUrl: 'https://console.cloud.google.com/apis/credentials',
+        description: 'Gmail OAuth Authentication'
+      },
+      {
+        name: 'Gmail OAuth Client Secret',
+        key: this.getGmailClientSecret(),
+        configured: !!this.getGmailClientSecret(),
+        category: 'marketing',
+        priority: 'critical',
+        setupUrl: 'https://console.cloud.google.com/apis/credentials',
+        description: 'Gmail OAuth Secret'
+      },
+      {
+        name: 'Gmail Refresh Token',
+        key: this.getGmailRefreshToken(),
+        configured: !!this.getGmailRefreshToken(),
+        category: 'marketing',
+        priority: 'critical',
+        setupUrl: 'https://developers.google.com/oauthplayground',
+        description: 'Gmail OAuth Refresh Token'
       },
       {
         name: 'SendGrid',
