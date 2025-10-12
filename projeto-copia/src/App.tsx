@@ -65,6 +65,7 @@ import AIContentGenerator from "./pages/AIContentGenerator";
 import GoogleAdsCampaignsPage from "./pages/GoogleAdsCampaigns";
 import MarketingDashboard from "./pages/MarketingDashboard";
 import BrokerDashboard from "./pages/broker/BrokerDashboard";
+import CredentialsManager from "./pages/CredentialsManager";
 
 const queryClient = new QueryClient();
 
@@ -284,6 +285,11 @@ const App = () => (
               <Route path="/broker-dashboard" element={
                 <AppLayout>
                   <BrokerDashboard />
+                </AppLayout>
+              } />
+              <Route path="/credentials-manager" element={
+                <AppLayout>
+                  <CredentialsManager />
                 </AppLayout>
               } />
               

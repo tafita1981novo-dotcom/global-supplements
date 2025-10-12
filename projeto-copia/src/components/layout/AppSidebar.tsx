@@ -414,6 +414,11 @@ export function AppSidebar() {
       url: "#settings",
     },
     {
+      title: "🔑 Credentials Manager",
+      icon: Key,
+      url: "/credentials-manager",
+    },
+    {
       title: "🔑 Setup de APIs",
       icon: Key,
       url: "/api-setup",
