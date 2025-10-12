@@ -71,7 +71,7 @@ serve(async (req) => {
       }));
 
       const { data: inserted, error } = await supabase
-        .from('opportunities')
+        .from('amazon_products')
         .upsert(productsToInsert, { onConflict: 'asin' });
 
       if (error) {
@@ -94,8 +94,8 @@ serve(async (req) => {
     // 2. B2B BUYERS DETECTION (Real LinkedIn/Alibaba)
     // ============================================
     if (action === 'detect_buyers') {
-      const { data: opportunities } = await supabase
-        .from('opportunities')
+      const { data: products } = await supabase
+        .from('amazon_products')
         .select('*')
         .order('reviews', { ascending: false })
         .limit(100);
@@ -103,16 +103,24 @@ serve(async (req) => {
       // Analyze top products to find potential B2B buyers
       const potentialBuyers: any[] = [];
 
-      for (const opp of opportunities || []) {
+      for (const product of products || []) {
         // Simple heuristic: products with high volume = B2B opportunity
-        if (opp.reviews > 1000 && opp.price < 50) {
+        if (product.reviews > 1000 && product.price < 50) {
           potentialBuyers.push({
-            opportunity_id: opp.id,
-            product: opp.title,
-            estimated_volume: Math.floor(opp.reviews / 10), // Reviews → Est. monthly volume
-            target_price: opp.price * 0.7, // 30% discount target
-            potential_margin: opp.price * 0.3,
-            source: 'market_analysis',
+            platform: 'Amazon Market Analysis',
+            company_name: `Potential Buyer - ${product.title.substring(0, 40)}`,
+            contact_person: 'To Be Identified',
+            email: `contact-${product.asin}@tbd.com`,
+            country: product.marketplace || 'US',
+            industry: product.category || 'Health Supplements',
+            product_needs: [product.title],
+            order_volume: `${Math.floor(product.reviews / 10)} units/month`,
+            budget_range: `$${(product.price * product.reviews / 100).toFixed(0)}`,
+            timeline: '30-60 days',
+            lead_score: Math.min(95, 50 + Math.floor(product.reviews / 100)),
+            status: 'prospect',
+            decision_maker_level: 'medium',
+            company_size: product.reviews > 5000 ? 'large' : 'medium',
             created_at: new Date().toISOString()
           });
         }
