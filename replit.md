@@ -1,5 +1,37 @@
 # Global Supplements - Premium Worldwide Network
 
+## 🔑 Centralized Credentials System (2025-10-12) - LATEST
+
+### ✅ Single Source of Truth - credentialsService.ts
+**NO MORE DUPLICATES! All credentials in ONE place.**
+
+**AVAILABLE CREDENTIALS (DO NOT REQUEST AGAIN!):**
+- ✅ **Supabase** (URL + Anon Key) - Database & Auth  
+- ✅ **OpenAI GPT-4** (from env) - AI Negotiations ($5K-$20K/month)
+- ✅ **RapidAPI** (from env) - Amazon Product Data ($10K-$50K/month)
+- ✅ **Company Info** (Name, EIN, Address, Trade Name) - All from environment
+
+**CONFIGURATION STATUS:**
+- 3/15 APIs configured (20%)
+- Missing Critical: Gmail API, Payoneer ID
+- All credentials auto-detected from .env via inject-secrets.sh
+- Full documentation: `CREDENTIALS_AVAILABLE.md`
+
+**HOW TO USE (NEVER DUPLICATE!):**
+```typescript
+import credentialsService from '@/services/credentialsService';
+const openaiKey = credentialsService.getOpenAIKey();
+const rapidKey = credentialsService.getRapidAPIKey();
+const company = credentialsService.getCompanyInfo();
+const status = credentialsService.getConfigurationStatus();
+```
+
+**RULES:**
+- ❌ NEVER request credentials that exist (check CREDENTIALS_AVAILABLE.md first!)
+- ❌ NEVER hardcode API keys
+- ✅ ALWAYS use credentialsService for all pages/functions
+- ✅ Update CREDENTIALS_AVAILABLE.md when adding new ones
+
 ## Overview
 
 Global Supplements is a B2B/B2C platform connecting global supplement suppliers with buyers. It uses AI-powered market intelligence and automated distribution to facilitate international trade, government contracts, and enterprise solutions across various product categories (beauty, quantum materials, medical-grade, smart gadgets, traditional wellness). The platform aims to identify arbitrage opportunities and execute high-margin deals in real-time by integrating numerous APIs for marketplace intelligence, logistics, compliance, and payment processing.

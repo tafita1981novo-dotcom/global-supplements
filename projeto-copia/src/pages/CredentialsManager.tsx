@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import credentialsService from "@/services/credentialsService";
 
 interface Credential {
   id: string;
@@ -178,29 +179,28 @@ export default function CredentialsManager() {
   }, []);
 
   const checkExistingCredentials = async () => {
-    // Check credentials from environment variables
-    const envCredentials: Record<string, boolean> = {
-      'rapidapi': !!import.meta.env.VITE_RAPIDAPI_KEY_1,
-      'openai': !!import.meta.env.VITE_OPENAI_API_KEY,
-      'gmail': !!import.meta.env.VITE_GMAIL_API_KEY,
-      'linkedin': !!import.meta.env.VITE_LINKEDIN_EMAIL,
-      'linkedin-password': !!import.meta.env.VITE_LINKEDIN_PASSWORD,
-      'stripe': !!import.meta.env.VITE_STRIPE_SECRET_KEY,
-      'payoneer': !!import.meta.env.VITE_PAYONEER_ID,
-      'sendgrid': !!import.meta.env.VITE_SENDGRID_API_KEY,
-      'buffer': !!import.meta.env.VITE_BUFFER_ACCESS_TOKEN
-    };
+    // Use centralized credentials service
+    const status = credentialsService.getConfigurationStatus();
+    const allCreds = credentialsService.getAllCredentials();
 
-    console.log('🔑 Checking credentials:', {
-      rapidapi: import.meta.env.VITE_RAPIDAPI_KEY_1?.substring(0, 20) + '...',
-      openai: import.meta.env.VITE_OPENAI_API_KEY?.substring(0, 20) + '...',
-      configured: envCredentials
+    // Log only status summary (no sensitive data)
+    console.log('🔑 Credentials Status:', {
+      total: status.total,
+      configured: status.configured,
+      percentage: status.percentage,
+      missingCritical: status.missingCritical
     });
 
-    const updatedCredentials = credentials.map(cred => ({
-      ...cred,
-      configured: envCredentials[cred.id] || false
-    }));
+    // Update UI with actual configured status from centralized service
+    const updatedCredentials = credentials.map(cred => {
+      const centralCred = allCreds.find(c => 
+        c.name.toLowerCase().includes(cred.name.toLowerCase().split(' ')[0])
+      );
+      return {
+        ...cred,
+        configured: centralCred?.configured || false
+      };
+    });
     
     setCredentials(updatedCredentials);
   };
