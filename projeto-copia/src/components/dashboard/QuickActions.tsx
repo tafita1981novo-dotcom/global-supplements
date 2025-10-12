@@ -119,10 +119,13 @@ export function QuickActions() {
   ];
 
   const publicPages = [
+    { id: "public-site-home", title: "Public Site Home", icon: Globe, path: "/", color: "bg-blue-800" },
+    { id: "public-site", title: "Public Site", icon: Layout, path: "/public-site", color: "bg-sky-700" },
     { id: "global-partnerships", title: "Global Partnerships", icon: Handshake, path: "/global-partnerships", color: "bg-blue-700" },
     { id: "premium-portfolio", title: "Premium Portfolio", icon: Award, path: "/premium-portfolio", color: "bg-amber-600" },
     { id: "product-patent-guide", title: "Product Patent Guide", icon: Book, path: "/product-patent-guide", color: "bg-indigo-600" },
     { id: "enterprise-solutions", title: "Enterprise Solutions", icon: Briefcase, path: "/enterprise-solutions", color: "bg-slate-700" },
+    { id: "real-time-execution-public", title: "Real-Time Execution", icon: Activity, path: "/real-time-execution", color: "bg-red-700" },
     { id: "bundles", title: "Bundles", icon: ShoppingBag, path: "/bundles", color: "bg-pink-700" },
     { id: "products", title: "Products", icon: Package, path: "/products", color: "bg-green-700" },
     { id: "pre-order-policy", title: "Pre-Order Policy", icon: ClipboardList, path: "/pre-order-policy", color: "bg-gray-700" },
