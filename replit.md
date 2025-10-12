@@ -57,6 +57,20 @@ The backend is primarily built on Supabase, providing authentication, a PostgreS
 
 ## 📦 Recent Changes
 
+### 2025-10-12: Amazon Custom Search Implementation & Deploy Automation
+- ✅ **Custom Search Feature Implemented**: Users can now search Amazon products by typing any keyword
+  - Search bar accepts custom queries (e.g., "collagen", "vitamin C", "omega 3")
+  - Bypasses all cache layers (instant cache, intelligent cache, productMonitor) for custom searches
+  - Real-time API calls to Amazon for accurate, fresh results per search term
+  - Each search term returns unique, relevant products
+  - Automatic category reset to "All" on custom search
+  - Fixed race condition where cache was blocking new search results
+- ✅ **Deployment System Active**: Dual deployment strategy working
+  - GitHub Actions → Hostinger: Automatic deploy on push to main (16x/day scheduled)
+  - Replit Deploy: Manual trigger available
+  - Both systems tested and operational
+- ✅ **Code Quality**: LSP errors resolved, TypeScript compilation clean
+
 ### 2025-10-12: Project Recovery, Security Fix & Complete Deploy Corrections
 - ✅ **projeto-copia folder successfully recovered** (436 files intact)
 - ✅ **Both sites operational**: / (main site) and /amazon (affiliate store)
