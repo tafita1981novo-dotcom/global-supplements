@@ -33,97 +33,270 @@ serve(async (req) => {
     console.log(`🤖 AUTOMATION SCHEDULER: ${action}`);
 
     // ============================================
-    // PIPELINE CORRETO: RFQ → SUPPLIER MATCHING → NEGOTIATION
+    // PIPELINE COMPLETO AUTÔNOMO: 100 APIs → MATCHING → GPT-4 NEGOTIATION
     // ============================================
     if (action === 'run_full_pipeline') {
       const results = {
         timestamp: new Date().toISOString(),
-        steps: []
+        steps: [],
+        autonomous_run_id: `run_${Date.now()}`
       };
 
-      // STEP 1: BUSCAR RFQs REAIS DE COMPRADORES (IndiaMART)
-      console.log('🇮🇳 Step 1: Fetching real buyer RFQs from IndiaMART...');
-      try {
-        const rfqResponse = await fetch(`${supabaseUrl}/functions/v1/indiamart-rfq-detector`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${supabaseKey}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ 
-            action: 'fetch_indiamart_leads',
-            params: {} 
-          })
-        });
-        const rfqData = await rfqResponse.json();
-        results.steps.push({
-          step: 1,
-          name: 'IndiaMART RFQ Detection',
-          status: rfqData.success ? 'success' : 'failed',
-          data: rfqData
-        });
-      } catch (error: any) {
-        results.steps.push({
-          step: 1,
-          name: 'IndiaMART RFQ Detection',
-          status: 'error',
-          error: error.message
-        });
+      // Registrar execução autônoma
+      const { data: runRecord } = await supabase
+        .from('autonomous_runs')
+        .insert({
+          run_type: 'rfq_fetch',
+          status: 'running',
+          execution_log: { started: new Date().toISOString() }
+        })
+        .select()
+        .single();
+
+      // STEP 1: BUSCAR RFQs DAS 100 APIS (Priorizar API-direct)
+      console.log('🌍 Step 1: Fetching RFQs from ALL 100 configured APIs...');
+      
+      // Pegar TODAS as APIs configuradas (100 fontes)
+      const { data: configuredApis } = await supabase
+        .from('rfq_api_credentials')
+        .select('*')
+        .eq('is_active', true)
+        .order('tier_priority', { ascending: true }); // Tier 1 primeiro
+
+      let totalRfqsFetched = 0;
+      let apisFetched = 0;
+      let apiErrors = 0;
+
+      // Processar APIs por tier (priorizar APIs diretas)
+      for (const api of configuredApis || []) {
+        try {
+          console.log(`📡 Fetching from ${api.api_name} (Tier ${api.tier_priority})...`);
+          
+          let rfqData: any = null;
+
+          // ⚡ PRIORIDADE: APIs com negociação direta
+          if (api.supports_direct_negotiation) {
+            console.log(`✅ ${api.api_name} supports DIRECT NEGOTIATION - Prioritizing!`);
+          }
+
+          // Chamar Edge Function específica baseada na API
+          if (api.api_name === 'INDIAMART_KEY') {
+            const response = await fetch(`${supabaseUrl}/functions/v1/indiamart-rfq-detector`, {
+              method: 'POST',
+              headers: { 'Authorization': `Bearer ${supabaseKey}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action: 'fetch_indiamart_leads', api_key: api.api_key })
+            });
+            rfqData = await response.json();
+          } 
+          else if (api.api_name === 'ALIBABA_API_KEY' || api.api_name === 'APIFY_API_TOKEN') {
+            const response = await fetch(`${supabaseUrl}/functions/v1/alibaba-rfq-scraper`, {
+              method: 'POST',
+              headers: { 'Authorization': `Bearer ${supabaseKey}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action: 'scrape_alibaba', api_key: api.api_key })
+            });
+            rfqData = await response.json();
+          }
+          else if (api.api_name === 'SAM_GOV_API_KEY') {
+            const response = await fetch(`${supabaseUrl}/functions/v1/sam-gov-rfq-detector`, {
+              method: 'POST',
+              headers: { 'Authorization': `Bearer ${supabaseKey}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action: 'fetch_contracts', api_key: api.api_key })
+            });
+            rfqData = await response.json();
+          }
+          else if (api.api_name === 'GLOBALSOURCES_API') {
+            const response = await fetch(`${supabaseUrl}/functions/v1/globalsources-rfq-api`, {
+              method: 'POST',
+              headers: { 'Authorization': `Bearer ${supabaseKey}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action: 'fetch_rfqs', api_key: api.api_key })
+            });
+            rfqData = await response.json();
+          }
+
+          // Normalizar e salvar RFQs no rfq_inbox
+          if (rfqData && rfqData.success && rfqData.rfqs) {
+            for (const rfq of rfqData.rfqs) {
+              await supabase.from('rfq_inbox').insert({
+                source_api: api.api_name,
+                source_id: rfq.id || `${api.api_name}_${Date.now()}`,
+                buyer_name: rfq.buyer_name || rfq.company_name,
+                buyer_country: rfq.country,
+                product_description: rfq.product || rfq.description,
+                quantity: rfq.quantity,
+                budget_usd: rfq.budget || rfq.price,
+                deadline: rfq.deadline,
+                contact_method: api.supports_direct_negotiation ? 'api' : 'email',
+                contact_data: { 
+                  api_endpoint: api.negotiation_endpoint,
+                  email: rfq.email,
+                  api_method: api.negotiation_method 
+                },
+                raw_data: rfq,
+                status: 'new',
+                priority_score: api.supports_direct_negotiation ? 95 : 70 // API direta = prioridade
+              });
+              totalRfqsFetched++;
+            }
+          }
+
+          apisFetched++;
+        } catch (error: any) {
+          console.error(`Error fetching from ${api.api_name}:`, error);
+          apiErrors++;
+        }
       }
 
-      // STEP 2: BUSCAR FORNECEDORES GLOBAIS (Para cada RFQ)
-      console.log('🌍 Step 2: Finding global suppliers for RFQs...');
-      try {
-        const { data: buyers } = await supabase
-          .from('b2b_buyers')
-          .select('*')
-          .eq('contact_status', 'rfq_detected')
-          .limit(10);
+      results.steps.push({
+        step: 1,
+        name: '100 Global APIs - RFQ Fetch',
+        status: 'success',
+        data: {
+          total_apis_configured: configuredApis?.length || 0,
+          apis_fetched_successfully: apisFetched,
+          apis_with_errors: apiErrors,
+          total_rfqs_fetched: totalRfqsFetched,
+          api_direct_prioritized: true
+        }
+      });
 
-        let suppliersMatched = 0;
-        
-        for (const buyer of buyers || []) {
-          const productNeeded = buyer.product_needs?.[0] || '';
-          const budgetStr = buyer.budget_range || '0';
-          const maxPrice = parseFloat(budgetStr.replace(/[^0-9.]/g, '')) || 0;
+      // STEP 2: PROCESSAR CADA RFQ - Buscar fornecedores e negociar
+      console.log('🔍 Step 2: Processing RFQs - Finding suppliers and negotiating...');
+      
+      // Pegar RFQs novas (priorizar API-direct)
+      const { data: newRfqs } = await supabase
+        .from('rfq_inbox')
+        .select('*')
+        .eq('status', 'new')
+        .order('priority_score', { ascending: false })
+        .limit(50); // Processar 50 por vez
 
-          const supplierResponse = await fetch(`${supabaseUrl}/functions/v1/global-supplier-finder`, {
+      let rfqsProcessed = 0;
+      let suppliersFound = 0;
+      let negotiationsStarted = 0;
+
+      for (const rfq of newRfqs || []) {
+        try {
+          console.log(`📦 Processing RFQ: ${rfq.product_description} from ${rfq.buyer_name}`);
+
+          // STEP 2A: Buscar fornecedores para este produto
+          const matchResponse = await fetch(`${supabaseUrl}/functions/v1/supplier-matcher`, {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${supabaseKey}`,
               'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-              action: 'search_suppliers',
-              params: {
-                productName: productNeeded,
-                maxPrice: maxPrice > 0 ? maxPrice : undefined,
-                maxDeliveryDays: 30,
-                country: buyer.country
+              action: 'match_supplier',
+              requirements: {
+                product_name: rfq.product_description,
+                quantity: rfq.quantity || 1000,
+                max_price_per_unit: rfq.budget_usd || 50,
+                max_delivery_days: rfq.deadline ? Math.ceil((new Date(rfq.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : 30,
+                preferred_shipping: 'air',
+                country: rfq.buyer_country
               }
             })
           });
 
-          const supplierData = await supplierResponse.json();
-          if (supplierData.success && supplierData.suppliers?.length > 0) {
-            suppliersMatched++;
-          }
-        }
+          const matchData = await matchResponse.json();
 
-        results.steps.push({
-          step: 2,
-          name: 'Global Supplier Matching',
-          status: 'success',
-          data: { buyers_processed: buyers?.length || 0, suppliers_matched: suppliersMatched }
-        });
-      } catch (error: any) {
-        results.steps.push({
-          step: 2,
-          name: 'Global Supplier Matching',
-          status: 'error',
-          error: error.message
-        });
+          if (matchData.success && matchData.best_match) {
+            suppliersFound++;
+            
+            // Atualizar status do RFQ
+            await supabase
+              .from('rfq_inbox')
+              .update({ status: 'matched' })
+              .eq('id', rfq.id);
+
+            // STEP 2B: Verificar timing - Devemos negociar AGORA ou ESPERAR?
+            const timingResponse = await fetch(`${supabaseUrl}/functions/v1/conversation-intelligence`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${supabaseKey}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                action: 'decide_timing',
+                rfq_id: rfq.id,
+                buyer_country: rfq.buyer_country
+              })
+            });
+
+            const timingData = await timingResponse.json();
+
+            if (timingData.success && timingData.timing_decision?.decision === 'send_now') {
+              // STEP 2C: Iniciar negociação (PRIORIDADE: API direta)
+              const negotiationMethod = rfq.contact_method === 'api' ? 'api' : 'email';
+              
+              console.log(`🤝 Starting ${negotiationMethod} negotiation for RFQ ${rfq.id}`);
+
+              const negResponse = await fetch(`${supabaseUrl}/functions/v1/autonomous-negotiator`, {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${supabaseKey}`,
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  action: 'negotiate',
+                  buyer_email: rfq.contact_data?.email || 'contact@example.com',
+                  buyer_company: rfq.buyer_name,
+                  buyer_country: rfq.buyer_country,
+                  supplier_id: matchData.best_match.supplier_id,
+                  product: rfq.product_description,
+                  quantity: rfq.quantity,
+                  target_price: matchData.best_match.price_per_unit,
+                  contact_method: negotiationMethod,
+                  api_endpoint: rfq.contact_data?.api_endpoint,
+                  api_method: rfq.contact_data?.api_method
+                })
+              });
+
+              const negData = await negResponse.json();
+              
+              if (negData.success) {
+                negotiationsStarted++;
+                
+                // Atualizar RFQ para "negotiating"
+                await supabase
+                  .from('rfq_inbox')
+                  .update({ status: 'negotiating' })
+                  .eq('id', rfq.id);
+
+                // Salvar decisão GPT-4
+                await supabase
+                  .from('ai_decision_state')
+                  .insert({
+                    rfq_id: rfq.id,
+                    decision_type: 'start_negotiation',
+                    decision_rationale: `Matched supplier ${matchData.best_match.supplier_name} with ${negotiationMethod} communication`,
+                    context_data: { match: matchData.best_match, timing: timingData.timing_decision },
+                    outcome: 'pending',
+                    confidence_score: 85
+                  });
+              }
+            } else {
+              console.log(`⏰ Waiting for optimal timing: ${timingData.timing_decision?.reason}`);
+            }
+          }
+
+          rfqsProcessed++;
+        } catch (error: any) {
+          console.error(`Error processing RFQ ${rfq.id}:`, error);
+        }
       }
+
+      results.steps.push({
+        step: 2,
+        name: 'RFQ Processing - Suppliers & Negotiation',
+        status: 'success',
+        data: {
+          rfqs_processed: rfqsProcessed,
+          suppliers_found: suppliersFound,
+          negotiations_started: negotiationsStarted,
+          api_direct_used: newRfqs?.filter(r => r.contact_method === 'api').length || 0
+        }
+      });
 
       // STEP 3: Matching Inteligente + Negociação
       console.log('🤝 Step 3: Running intelligent matching...');

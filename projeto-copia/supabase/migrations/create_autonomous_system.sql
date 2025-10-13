@@ -76,8 +76,8 @@ CREATE TABLE IF NOT EXISTS learning_events (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_learning_type ON learning_events(event_type);
-CREATE INDEX idx_learning_impact ON learning_events(impact_score DESC);
+CREATE INDEX IF NOT EXISTS idx_learning_type ON learning_events(event_type);
+CREATE INDEX IF NOT EXISTS idx_learning_impact ON learning_events(impact_score DESC);
 
 -- 5. Negotiation Strategies - Estratégias aprendidas
 CREATE TABLE IF NOT EXISTS negotiation_strategies (
@@ -97,8 +97,8 @@ CREATE TABLE IF NOT EXISTS negotiation_strategies (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_strategy_country ON negotiation_strategies(buyer_country);
-CREATE INDEX idx_strategy_success ON negotiation_strategies(success_rate DESC);
+CREATE INDEX IF NOT EXISTS idx_strategy_country ON negotiation_strategies(buyer_country);
+CREATE INDEX IF NOT EXISTS idx_strategy_success ON negotiation_strategies(success_rate DESC);
 
 -- 6. Conversation Timelines - Timing de conversas
 CREATE TABLE IF NOT EXISTS conversation_timelines (
@@ -117,8 +117,8 @@ CREATE TABLE IF NOT EXISTS conversation_timelines (
   wait_reason TEXT
 );
 
-CREATE INDEX idx_timeline_rfq ON conversation_timelines(rfq_id);
-CREATE INDEX idx_timeline_wait ON conversation_timelines(ai_should_wait, response_expected_at);
+CREATE INDEX IF NOT EXISTS idx_timeline_rfq ON conversation_timelines(rfq_id);
+CREATE INDEX IF NOT EXISTS idx_timeline_wait ON conversation_timelines(ai_should_wait, response_expected_at);
 
 -- 7. Payoneer Transactions - Controle financeiro em tempo real
 CREATE TABLE IF NOT EXISTS payoneer_transactions (
@@ -138,9 +138,9 @@ CREATE TABLE IF NOT EXISTS payoneer_transactions (
   completed_at TIMESTAMPTZ
 );
 
-CREATE INDEX idx_payoneer_type ON payoneer_transactions(transaction_type);
-CREATE INDEX idx_payoneer_status ON payoneer_transactions(status);
-CREATE INDEX idx_payoneer_synced ON payoneer_transactions(synced_at DESC);
+CREATE INDEX IF NOT EXISTS idx_payoneer_type ON payoneer_transactions(transaction_type);
+CREATE INDEX IF NOT EXISTS idx_payoneer_status ON payoneer_transactions(status);
+CREATE INDEX IF NOT EXISTS idx_payoneer_synced ON payoneer_transactions(synced_at DESC);
 
 -- 8. Financial Alerts - Alertas financeiros
 CREATE TABLE IF NOT EXISTS financial_alerts (
@@ -156,7 +156,7 @@ CREATE TABLE IF NOT EXISTS financial_alerts (
   resolved_at TIMESTAMPTZ
 );
 
-CREATE INDEX idx_alerts_severity ON financial_alerts(severity, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_alerts_severity ON financial_alerts(severity, created_at DESC);
 
 -- 9. API Direct Negotiations - Negociações diretas via API (SEM humanos)
 CREATE TABLE IF NOT EXISTS api_negotiations (
@@ -174,8 +174,8 @@ CREATE TABLE IF NOT EXISTS api_negotiations (
   response_received_at TIMESTAMPTZ
 );
 
-CREATE INDEX idx_api_neg_rfq ON api_negotiations(rfq_id);
-CREATE INDEX idx_api_neg_status ON api_negotiations(status);
+CREATE INDEX IF NOT EXISTS idx_api_neg_rfq ON api_negotiations(rfq_id);
+CREATE INDEX IF NOT EXISTS idx_api_neg_status ON api_negotiations(status);
 
 -- 10. System Evolution Metrics - Métricas de evolução do sistema
 CREATE TABLE IF NOT EXISTS evolution_metrics (
@@ -195,7 +195,7 @@ CREATE TABLE IF NOT EXISTS evolution_metrics (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_metrics_date ON evolution_metrics(metric_date DESC);
+CREATE INDEX IF NOT EXISTS idx_metrics_date ON evolution_metrics(metric_date DESC);
 
 -- 11. Atualizar tabela de APIs com suporte a negociação direta
 ALTER TABLE rfq_api_credentials 

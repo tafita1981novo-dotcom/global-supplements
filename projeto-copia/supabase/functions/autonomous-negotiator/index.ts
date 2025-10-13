@@ -102,10 +102,12 @@ class AutonomousNegotiator {
               💰 CRITICAL RULE: ZERO INVESTMENT principle - NEVER close any deal unless payment is received 100% in advance.
               Your goal is to maximize profit while building long-term business relationships with ZERO FINANCIAL RISK.
               
-              🎯 COMMUNICATION PRIORITY:
-              1. Try API communication first (Alibaba API, IndiaMART API, etc.)
-              2. If no API available, use professional email
-              3. Mention other platforms as backup
+              🎯 CRITICAL COMMUNICATION PRIORITY (API-FIRST):
+              1. **ALWAYS try API communication FIRST** (Alibaba API, IndiaMART API, SAM.gov API, GlobalSources API, etc.)
+              2. API = instant, automated, no human needed = PRIORITY #1
+              3. Only use email if NO API endpoint available
+              4. Check contact_method in RFQ data: if 'api' → use API negotiation
+              5. Store all API negotiations in api_negotiations table for tracking
               
               Always be professional, data-driven, and strategic in your responses.
               MANDATORY: All deals must have 100% advance payment or confirmed letter of credit before supplier commitment.`
@@ -184,12 +186,13 @@ Generate a professional, strategic response that:
 10. Includes specific next steps or calls to action
 11. **NEVER repeats any message from the conversation history above**
 12. Builds naturally on previous interactions (if any exist)
+13. **API-FIRST**: If contact_method is 'api', format response as API payload (JSON), NOT email text
 
 💰 CRITICAL PAYMENT RULE: 
 Never agree to any payment terms that require upfront investment from Global Supplements.
 We only work with: Wire Transfer, L/C, Stripe, PayPal, Wise - 100% payment in advance.
 
-📧 Response format: Professional business ${context.preferred_channel || 'email'} message.
+📧 Response format: ${context.api_available ? 'API JSON payload for ' + context.api_endpoint : 'Professional business ' + (context.preferred_channel || 'email') + ' message'}
 `;
   }
 
