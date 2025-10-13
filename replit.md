@@ -98,7 +98,7 @@ Located at `/automation-dashboard`, provides:
 
 -   **100% Autonomous AI Broker**: GPT-4 controla tudo sem humanos - busca RFQs de 100 APIs, match de fornecedores, timing cultural, negociação multi-idioma, aprendizado contínuo, tracking Payoneer. Sistema prioriza negociação direta via API (IndiaMART, Alibaba, SAM.gov).
 -   **Continuous Learning System**: GPT-4 aprende com cada negociação (sucesso/falha), ajusta estratégias automaticamente, melhora preços e timing, registra lições aprendidas em `learning_events`, evolui `negotiation_strategies` dia a dia.
--   **Cultural Timing Intelligence**: Sistema analisa cultura do país (USA=resposta rápida, Japão=espera paciente), calcula tempo médio de resposta histórico, decide quando enviar mensagem vs esperar, registra em `conversation_timelines`.
+-   **Conversation Timing Intelligence**: Sistema detecta quando GPT-4 fez uma PERGUNTA ou OFERTA e aguarda a RESPOSTA antes de falar novamente. Evita spam de mensagens, garante fluxo natural de conversação. Registra em `conversation_timelines`: requires_response=true → espera → response_received → pode falar.
 -   **Payoneer Real-Time Control**: Tracking automático (ID: 99133638) - sincroniza balanço, registra comissões/pagamentos, alertas financeiros, Zero Investment enforcement (nunca paga fornecedor antes do comprador).
 -   **Complete Automation Pipeline**: 100 APIs → Normalização rfq_inbox → supplier-matcher → conversation-intelligence → autonomous-negotiator (API-first) → learning-engine → payoneer-sync. Executa a cada 30 min via Cron Job.
 
