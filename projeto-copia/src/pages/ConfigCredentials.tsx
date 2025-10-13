@@ -24,6 +24,9 @@ interface Credential {
   api_docs_url?: string;
   estimated_time_minutes?: number;
   signup_url?: string;
+  revenue_priority?: number;
+  monthly_revenue_potential?: string;
+  ease_of_entry?: string;
 }
 
 export default function ConfigCredentials() {
@@ -43,7 +46,7 @@ export default function ConfigCredentials() {
       const { data, error } = await (supabase as any)
         .from('rfq_api_credentials')
         .select('*')
-        .order('region_priority', { ascending: true });
+        .order('revenue_priority', { ascending: true });
 
       if (error) throw error;
       
@@ -143,32 +146,41 @@ export default function ConfigCredentials() {
   const configuredCount = credentials.filter(c => c.is_configured).length;
   const totalCount = credentials.length;
 
-  // Agrupar por continente
-  const groupedByContinent = credentials.reduce((acc, cred) => {
-    const continent = cred.continent || 'Global';
-    if (!acc[continent]) {
-      acc[continent] = [];
+  // Agrupar por TIER de REVENUE
+  const groupedByTier = credentials.reduce((acc, cred) => {
+    const priority = cred.revenue_priority || 100;
+    let tier = 'Tier 5: Nicho/Especializado';
+    
+    if (priority <= 10) tier = '💎 Tier 1: MAIOR ROI + Fácil Entrada';
+    else if (priority <= 30) tier = '🥇 Tier 2: Bom ROI + Setup Médio';
+    else if (priority <= 40) tier = '🏆 Tier 3: Enterprise/High Ticket';
+    else if (priority <= 50) tier = '🏛️ Tier 4: Government High Value';
+    
+    if (!acc[tier]) {
+      acc[tier] = [];
     }
-    acc[continent].push(cred);
+    acc[tier].push(cred);
     return acc;
   }, {} as Record<string, Credential[]>);
 
-  // Ordem dos continentes
-  const continentOrder = ['Americas', 'Asia', 'Europe', 'Middle East', 'Africa', 'Global'];
-  const sortedContinents = Object.keys(groupedByContinent).sort((a, b) => {
-    const indexA = continentOrder.indexOf(a);
-    const indexB = continentOrder.indexOf(b);
-    return (indexA === -1 ? 999 : indexA) - (indexB === -1 ? 999 : indexB);
+  // Ordem dos tiers (já ordenado por revenue_priority)
+  const tierOrder = [
+    '💎 Tier 1: MAIOR ROI + Fácil Entrada',
+    '🥇 Tier 2: Bom ROI + Setup Médio', 
+    '🏆 Tier 3: Enterprise/High Ticket',
+    '🏛️ Tier 4: Government High Value',
+    'Tier 5: Nicho/Especializado'
+  ];
+  const sortedTiers = Object.keys(groupedByTier).sort((a, b) => {
+    return tierOrder.indexOf(a) - tierOrder.indexOf(b);
   });
 
-  // Ícones de continentes
-  const continentIcons: Record<string, string> = {
-    'Americas': '🌎',
-    'Asia': '🌏',
-    'Europe': '🌍',
-    'Middle East': '🕌',
-    'Africa': '🦁',
-    'Global': '🌐'
+  // Ícones de facilidade
+  const easeIcons: Record<string, string> = {
+    'Free': '🆓',
+    'Easy': '✅',
+    'Medium': '⚙️',
+    'Hard': '🔒'
   };
 
   if (loading) {
@@ -232,27 +244,34 @@ export default function ConfigCredentials() {
       </div>
 
       <div className="space-y-6">
-        {sortedContinents.map((continent) => {
-          const continentCreds = groupedByContinent[continent];
-          const continentConfigured = continentCreds.filter(c => c.is_configured).length;
-          const continentTotal = continentCreds.length;
-          const continentRFQs = continentCreds.filter(c => c.is_configured).reduce((sum, c) => sum + c.estimated_rfqs_unlocked, 0);
+        {sortedTiers.map((tier) => {
+          const tierCreds = groupedByTier[tier];
+          const tierConfigured = tierCreds.filter(c => c.is_configured).length;
+          const tierTotal = tierCreds.length;
+          const tierRFQs = tierCreds.filter(c => c.is_configured).reduce((sum, c) => sum + c.estimated_rfqs_unlocked, 0);
+          const tierRevenue = tierCreds.filter(c => c.is_configured).reduce((sum, c) => {
+            const rev = c.monthly_revenue_potential?.match(/\$([\d.]+)([KM])/);
+            if (rev) {
+              const val = parseFloat(rev[1]);
+              const mult = rev[2] === 'M' ? 1000 : 1;
+              return sum + (val * mult);
+            }
+            return sum;
+          }, 0);
           
           return (
-            <div key={continent} className="space-y-3">
-              <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
-                <div className="flex items-center gap-3">
-                  <span className="text-3xl">{continentIcons[continent] || '🌐'}</span>
-                  <div>
-                    <h2 className="text-xl font-bold">{continent}</h2>
-                    <p className="text-sm text-muted-foreground">
-                      {continentConfigured}/{continentTotal} configuradas • {continentRFQs.toLocaleString()} RFQs/dia
-                    </p>
-                  </div>
+            <div key={tier} className="space-y-3">
+              <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 rounded-lg border-2 border-blue-200 dark:border-blue-800">
+                <div className="flex-1">
+                  <h2 className="text-xl font-bold">{tier}</h2>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {tierConfigured}/{tierTotal} configuradas • {tierRFQs.toLocaleString()} RFQs/dia
+                    {tierRevenue > 0 && <> • <span className="font-bold text-green-600">${tierRevenue.toFixed(0)}K/mês desbloqueados</span></>}
+                  </p>
                 </div>
               </div>
               
-              {continentCreds.map((credential) => {
+              {tierCreds.map((credential) => {
                 const isConfigured = credential.is_configured;
                 const currentValue = localValues[credential.id] || '';
                 const hasChanges = currentValue !== (credential.key_value || '');
@@ -281,17 +300,30 @@ export default function ConfigCredentials() {
                           </div>
                           <CardDescription className="text-sm">{credential.description}</CardDescription>
                           <div className="flex items-center gap-4 mt-2 flex-wrap">
+                            {credential.monthly_revenue_potential && (
+                              <div className="flex items-center gap-1">
+                                <span className="text-lg font-bold text-green-600">
+                                  💰 {credential.monthly_revenue_potential}
+                                </span>
+                              </div>
+                            )}
+                            {credential.ease_of_entry && (
+                              <Badge variant={credential.ease_of_entry === 'Free' ? 'default' : 'secondary'} className={
+                                credential.ease_of_entry === 'Free' ? 'bg-green-600' :
+                                credential.ease_of_entry === 'Easy' ? 'bg-blue-600' :
+                                credential.ease_of_entry === 'Medium' ? 'bg-yellow-600' : 'bg-red-600'
+                              }>
+                                {easeIcons[credential.ease_of_entry]} {credential.ease_of_entry}
+                              </Badge>
+                            )}
                             <span className="text-sm text-muted-foreground">
                               +{credential.estimated_rfqs_unlocked.toLocaleString()} RFQs/dia
-                            </span>
-                            <span className="text-sm text-muted-foreground">
-                              {credential.required_for_sources.length} fonte(s)
                             </span>
                             {credential.countries && credential.countries.length > 0 && (
                               <div className="flex items-center gap-1">
                                 <Globe className="h-3 w-3" />
-                                <span className="text-sm font-medium text-blue-600">
-                                  {credential.countries.join(', ')}
+                                <span className="text-xs font-medium text-blue-600">
+                                  {credential.countries.slice(0, 3).join(', ')}{credential.countries.length > 3 ? '...' : ''}
                                 </span>
                               </div>
                             )}
