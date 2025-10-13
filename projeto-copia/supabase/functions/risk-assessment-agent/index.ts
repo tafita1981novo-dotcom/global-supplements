@@ -24,11 +24,19 @@ serve(async (req) => {
     // 1. Buscar negociação paralela
     const { data: parallelNeg, error: negError } = await supabase
       .from('parallel_negotiations')
-      .select('*, rfq_inbox(*), supplier_product_mappings(*)')
+      .select('*, rfq_inbox(*)')
       .eq('id', parallel_negotiation_id)
       .single();
 
     if (negError) throw negError;
+
+    // 2. Buscar fornecedores mapeados separadamente usando rfq_id
+    const { data: supplierMappings, error: mappingsError } = await supabase
+      .from('supplier_product_mappings')
+      .select('*')
+      .eq('rfq_id', parallelNeg.rfq_id);
+
+    if (mappingsError) throw mappingsError;
 
     const openaiKey = Deno.env.get('OPENAI_API_KEY');
 
