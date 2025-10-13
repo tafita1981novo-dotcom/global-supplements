@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Key, CheckCircle, ExternalLink, Zap, Globe, Save } from 'lucide-react';
+import { Key, CheckCircle, ExternalLink, Zap, Globe, Save, ChevronDown, ChevronUp, Clock, BookOpen } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface Credential {
   id: number;
@@ -19,6 +20,9 @@ interface Credential {
   countries: string[];
   continent: string;
   region_priority: number;
+  setup_steps?: string[];
+  api_docs_url?: string;
+  estimated_time_minutes?: number;
 }
 
 export default function ConfigCredentials() {
@@ -26,6 +30,7 @@ export default function ConfigCredentials() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
   const [localValues, setLocalValues] = useState<Record<number, string>>({});
+  const [expandedSteps, setExpandedSteps] = useState<Record<number, boolean>>({});
   const { toast } = useToast();
 
   useEffect(() => {
@@ -301,7 +306,59 @@ export default function ConfigCredentials() {
                         </a>
                       </div>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="space-y-3">
+                      {/* Passo a Passo */}
+                      {credential.setup_steps && credential.setup_steps.length > 0 && (
+                        <Collapsible 
+                          open={expandedSteps[credential.id]} 
+                          onOpenChange={(open) => setExpandedSteps(prev => ({ ...prev, [credential.id]: open }))}
+                        >
+                          <CollapsibleTrigger className="flex items-center justify-between w-full p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-950/30 transition-colors">
+                            <div className="flex items-center gap-2">
+                              <BookOpen className="h-4 w-4 text-blue-600" />
+                              <span className="font-medium text-blue-900 dark:text-blue-100">
+                                📋 Como Obter esta API Key
+                              </span>
+                              {credential.estimated_time_minutes && (
+                                <Badge variant="outline" className="ml-2">
+                                  <Clock className="h-3 w-3 mr-1" />
+                                  ~{credential.estimated_time_minutes} min
+                                </Badge>
+                              )}
+                            </div>
+                            {expandedSteps[credential.id] ? (
+                              <ChevronUp className="h-4 w-4" />
+                            ) : (
+                              <ChevronDown className="h-4 w-4" />
+                            )}
+                          </CollapsibleTrigger>
+                          <CollapsibleContent className="mt-2">
+                            <div className="bg-muted p-4 rounded-lg space-y-2">
+                              {credential.setup_steps.map((step, idx) => (
+                                <div key={idx} className="flex items-start gap-2">
+                                  <span className="text-sm font-mono text-muted-foreground min-w-fit">{step.split('.')[0]}.</span>
+                                  <p className="text-sm">{step.substring(step.indexOf('.') + 1).trim()}</p>
+                                </div>
+                              ))}
+                              {credential.api_docs_url && (
+                                <div className="mt-3 pt-3 border-t">
+                                  <a
+                                    href={credential.api_docs_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-800"
+                                  >
+                                    <ExternalLink className="h-4 w-4" />
+                                    Abrir Documentação Completa da API
+                                  </a>
+                                </div>
+                              )}
+                            </div>
+                          </CollapsibleContent>
+                        </Collapsible>
+                      )}
+                      
+                      {/* Campo de Input e Botão Salvar */}
                       <form onSubmit={(e) => { e.preventDefault(); handleSave(credential); }} className="flex gap-2">
                         <Input
                           type="password"
@@ -329,8 +386,10 @@ export default function ConfigCredentials() {
                           )}
                         </Button>
                       </form>
+                      
+                      {/* Fontes Desbloqueadas */}
                       {credential.required_for_sources.length > 0 && (
-                        <div className="mt-2 flex flex-wrap gap-1">
+                        <div className="flex flex-wrap gap-1">
                           {credential.required_for_sources.map((source, idx) => (
                             <Badge key={idx} variant="outline" className="text-xs">
                               {source}
