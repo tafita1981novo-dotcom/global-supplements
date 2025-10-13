@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Key, CheckCircle, ExternalLink, Zap, Globe } from 'lucide-react';
+import { Key, CheckCircle, ExternalLink, Zap, Globe, Save } from 'lucide-react';
 
 interface Credential {
   id: number;
@@ -16,12 +16,16 @@ interface Credential {
   required_for_sources: string[];
   estimated_rfqs_unlocked: number;
   setup_url: string;
+  countries: string[];
+  continent: string;
+  region_priority: number;
 }
 
 export default function ConfigCredentials() {
   const [credentials, setCredentials] = useState<Credential[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
+  const [localValues, setLocalValues] = useState<Record<number, string>>({});
   const { toast } = useToast();
 
   useEffect(() => {
@@ -30,13 +34,21 @@ export default function ConfigCredentials() {
 
   const fetchCredentials = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('rfq_api_credentials')
         .select('*')
-        .order('estimated_rfqs_unlocked', { ascending: false });
+        .order('region_priority', { ascending: true });
 
       if (error) throw error;
-      setCredentials(data || []);
+      
+      const creds = (data || []) as Credential[];
+      setCredentials(creds);
+      
+      const initialValues: Record<number, string> = {};
+      creds.forEach(cred => {
+        initialValues[cred.id] = cred.key_value || '';
+      });
+      setLocalValues(initialValues);
     } catch (error) {
       console.error('Erro ao buscar credenciais:', error);
       toast({
@@ -49,46 +61,61 @@ export default function ConfigCredentials() {
     }
   };
 
-  const handleSave = async (credential: Credential, value: string) => {
+  const handleInputChange = (credId: number, value: string) => {
+    setLocalValues(prev => ({
+      ...prev,
+      [credId]: value
+    }));
+  };
+
+  const handleSave = async (credential: Credential) => {
+    const value = localValues[credential.id] || '';
     setSaving(credential.key_name);
+    
     try {
-      // Salvar no Supabase
-      const { error: dbError } = await supabase
+      // 1. Salvar no banco de dados
+      const { error: dbError } = await (supabase as any)
         .from('rfq_api_credentials')
         .update({
           key_value: value,
           is_configured: value.length > 0,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', credential.id);
+        .eq('id', credential.id.toString());
 
       if (dbError) throw dbError;
 
-      // Também salvar no secrets do Replit via API
-      const response = await fetch('/api/update-secret', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          key: credential.key_name,
-          value: value,
-        }),
-      });
-
-      if (!response.ok) {
-        console.warn('Aviso: Não foi possível salvar no Replit Secrets, mas foi salvo no banco');
+      // 2. Registrar no sistema (criar registro de ativação)
+      if (value.length > 0) {
+        await (supabase as any)
+          .from('automation_logs')
+          .insert({
+            action: 'API_ACTIVATED',
+            status: 'success',
+            details: {
+              api_key: credential.key_name,
+              sources_unlocked: credential.required_for_sources,
+              rfqs_per_day: credential.estimated_rfqs_unlocked,
+              activated_at: new Date().toISOString()
+            }
+          });
       }
 
-      toast({
-        title: 'Sucesso!',
-        description: `${credential.key_name} configurado com sucesso! ${credential.estimated_rfqs_unlocked.toLocaleString()} RFQs/dia desbloqueados.`,
-      });
-
-      // Atualizar estado local
+      // 3. Atualizar estado local
       setCredentials(
         credentials.map((c) =>
           c.id === credential.id ? { ...c, key_value: value, is_configured: value.length > 0 } : c
         )
       );
+
+      // 4. Notificar sucesso
+      toast({
+        title: '✅ API Configurada!',
+        description: value.length > 0 
+          ? `${credential.key_name} ativada! Sistema iniciará busca em ${credential.required_for_sources.length} fonte(s). +${credential.estimated_rfqs_unlocked.toLocaleString()} RFQs/dia desbloqueados.`
+          : `${credential.key_name} removida do sistema.`,
+      });
+
     } catch (error) {
       console.error('Erro ao salvar:', error);
       toast({
@@ -107,34 +134,64 @@ export default function ConfigCredentials() {
 
   const totalPotentialRFQs = credentials.reduce((sum, c) => sum + c.estimated_rfqs_unlocked, 0);
 
+  const configuredCount = credentials.filter(c => c.is_configured).length;
+  const totalCount = credentials.length;
+
+  // Agrupar por continente
+  const groupedByContinent = credentials.reduce((acc, cred) => {
+    const continent = cred.continent || 'Global';
+    if (!acc[continent]) {
+      acc[continent] = [];
+    }
+    acc[continent].push(cred);
+    return acc;
+  }, {} as Record<string, Credential[]>);
+
+  // Ordem dos continentes
+  const continentOrder = ['Americas', 'Asia', 'Europe', 'Middle East', 'Africa', 'Global'];
+  const sortedContinents = Object.keys(groupedByContinent).sort((a, b) => {
+    const indexA = continentOrder.indexOf(a);
+    const indexB = continentOrder.indexOf(b);
+    return (indexA === -1 ? 999 : indexA) - (indexB === -1 ? 999 : indexB);
+  });
+
+  // Ícones de continentes
+  const continentIcons: Record<string, string> = {
+    'Americas': '🌎',
+    'Asia': '🌏',
+    'Europe': '🌍',
+    'Middle East': '🕌',
+    'Africa': '🦁',
+    'Global': '🌐'
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Carregando configurações...</p>
+          <p className="text-muted-foreground">Carregando todas as credenciais...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto p-6 max-w-6xl">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">⚙️ Configuração de Credenciais</h1>
+    <div className="container mx-auto p-6 max-w-7xl">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold mb-2">⚙️ Configuração de Credenciais - 100 Fontes Globais</h1>
         <p className="text-muted-foreground">
-          Configure as APIs para desbloquear 287,600+ RFQs/dia de 100 fontes globais
+          Configure TODAS as APIs para desbloquear 287,600+ RFQs/dia de 100 fontes globais
         </p>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">RFQs Desbloqueados</p>
-                <p className="text-2xl font-bold">{totalRFQsUnlocked.toLocaleString()}/dia</p>
+                <p className="text-2xl font-bold text-green-600">{totalRFQsUnlocked.toLocaleString()}/dia</p>
               </div>
               <Zap className="h-8 w-8 text-green-500" />
             </div>
@@ -146,8 +203,8 @@ export default function ConfigCredentials() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">APIs Configuradas</p>
-                <p className="text-2xl font-bold">
-                  {credentials.filter((c) => c.is_configured).length}/{credentials.length}
+                <p className="text-2xl font-bold text-blue-600">
+                  {configuredCount}/{totalCount}
                 </p>
               </div>
               <Key className="h-8 w-8 text-blue-500" />
@@ -160,7 +217,7 @@ export default function ConfigCredentials() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Potencial Total</p>
-                <p className="text-2xl font-bold">{totalPotentialRFQs.toLocaleString()}/dia</p>
+                <p className="text-2xl font-bold text-purple-600">{totalPotentialRFQs.toLocaleString()}/dia</p>
               </div>
               <Globe className="h-8 w-8 text-purple-500" />
             </div>
@@ -168,117 +225,135 @@ export default function ConfigCredentials() {
         </Card>
       </div>
 
-      {/* Credentials List */}
-      <div className="space-y-4">
-        {credentials.map((credential) => (
-          <Card key={credential.id} className={credential.is_configured ? 'border-green-500' : ''}>
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <CardTitle className="flex items-center gap-2">
-                    {credential.is_configured && <CheckCircle className="h-5 w-5 text-green-500" />}
-                    {credential.key_name}
-                  </CardTitle>
-                  <CardDescription className="mt-2">{credential.description}</CardDescription>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium">
-                    +{credential.estimated_rfqs_unlocked.toLocaleString()} RFQs/dia
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {credential.required_for_sources.length} fonte(s)
-                  </p>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex gap-2">
-                  <div className="flex-1">
-                    <Label htmlFor={credential.key_name}>Valor da API Key</Label>
-                    <Input
-                      id={credential.key_name}
-                      type="password"
-                      placeholder={
-                        credential.key_name.includes('MOBILE')
-                          ? '+91-XXXXXXXXXX'
-                          : 'Cole sua API key aqui...'
-                      }
-                      defaultValue={credential.key_value || ''}
-                      onBlur={(e) => {
-                        if (e.target.value !== credential.key_value) {
-                          handleSave(credential, e.target.value);
-                        }
-                      }}
-                      disabled={saving === credential.key_name}
-                    />
-                  </div>
-                  <div className="flex items-end">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => window.open(credential.setup_url, '_blank')}
-                      title="Abrir página de setup"
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                    </Button>
+      <div className="space-y-6">
+        {sortedContinents.map((continent) => {
+          const continentCreds = groupedByContinent[continent];
+          const continentConfigured = continentCreds.filter(c => c.is_configured).length;
+          const continentTotal = continentCreds.length;
+          const continentRFQs = continentCreds.filter(c => c.is_configured).reduce((sum, c) => sum + c.estimated_rfqs_unlocked, 0);
+          
+          return (
+            <div key={continent} className="space-y-3">
+              <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+                <div className="flex items-center gap-3">
+                  <span className="text-3xl">{continentIcons[continent] || '🌐'}</span>
+                  <div>
+                    <h2 className="text-xl font-bold">{continent}</h2>
+                    <p className="text-sm text-muted-foreground">
+                      {continentConfigured}/{continentTotal} configuradas • {continentRFQs.toLocaleString()} RFQs/dia
+                    </p>
                   </div>
                 </div>
-
-                {/* Fontes que usam essa credencial */}
-                <div className="flex flex-wrap gap-2">
-                  {credential.required_for_sources.map((source) => (
-                    <span
-                      key={source}
-                      className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-                    >
-                      {source}
-                    </span>
-                  ))}
-                </div>
               </div>
-            </CardContent>
-          </Card>
-        ))}
+              
+              {continentCreds.map((credential) => {
+                const isConfigured = credential.is_configured;
+                const currentValue = localValues[credential.id] || '';
+                const hasChanges = currentValue !== (credential.key_value || '');
+                
+                return (
+                  <Card 
+                    key={credential.id} 
+                    className={`transition-all ${isConfigured ? 'border-l-4 border-l-green-500 bg-green-50/50 dark:bg-green-950/20' : 'border-l-4 border-l-gray-300'}`}
+                  >
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <CardTitle className="text-lg">{credential.key_name}</CardTitle>
+                            {isConfigured && (
+                              <Badge variant="default" className="bg-green-600">
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                Configurado
+                              </Badge>
+                            )}
+                            {!isConfigured && (
+                              <Badge variant="secondary">
+                                Pendente
+                              </Badge>
+                            )}
+                          </div>
+                          <CardDescription className="text-sm">{credential.description}</CardDescription>
+                          <div className="flex items-center gap-4 mt-2 flex-wrap">
+                            <span className="text-sm text-muted-foreground">
+                              +{credential.estimated_rfqs_unlocked.toLocaleString()} RFQs/dia
+                            </span>
+                            <span className="text-sm text-muted-foreground">
+                              {credential.required_for_sources.length} fonte(s)
+                            </span>
+                            {credential.countries && credential.countries.length > 0 && (
+                              <div className="flex items-center gap-1">
+                                <Globe className="h-3 w-3" />
+                                <span className="text-sm font-medium text-blue-600">
+                                  {credential.countries.join(', ')}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <a
+                          href={credential.setup_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 flex items-center gap-1 text-sm"
+                        >
+                          Documentação <ExternalLink className="h-3 w-3" />
+                        </a>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <form onSubmit={(e) => { e.preventDefault(); handleSave(credential); }} className="flex gap-2">
+                        <Input
+                          type="password"
+                          placeholder={`Cole sua ${credential.key_name} aqui...`}
+                          value={currentValue}
+                          onChange={(e) => handleInputChange(credential.id, e.target.value)}
+                          className="flex-1"
+                          autoComplete="off"
+                        />
+                        <Button
+                          type="submit"
+                          disabled={saving === credential.key_name || !hasChanges}
+                          variant={hasChanges ? "default" : "secondary"}
+                        >
+                          {saving === credential.key_name ? (
+                            <>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                              Salvando...
+                            </>
+                          ) : (
+                            <>
+                              <Save className="h-4 w-4 mr-2" />
+                              {hasChanges ? 'Salvar & Ativar' : 'Salvar'}
+                            </>
+                          )}
+                        </Button>
+                      </form>
+                      {credential.required_for_sources.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          {credential.required_for_sources.map((source, idx) => (
+                            <Badge key={idx} variant="outline" className="text-xs">
+                              {source}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          );
+        })}
       </div>
 
-      {/* Help Section */}
-      <Card className="mt-8 border-blue-500">
-        <CardHeader>
-          <CardTitle>💡 Como Obter as Credenciais?</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <h3 className="font-semibold mb-2">🇮🇳 IndiaMART (10,000 RFQs/dia):</h3>
-            <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
-              <li>Acesse indiamart.com e crie conta como Supplier</li>
-              <li>Vá em "Dashboard" → "API Integration"</li>
-              <li>Copie seu Mobile Number e API Key</li>
-              <li>Cole aqui acima ✅</li>
-            </ol>
-          </div>
-
-          <div>
-            <h3 className="font-semibold mb-2">🇨🇳 Apify (78,000 RFQs/dia - Alibaba, 1688, etc):</h3>
-            <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
-              <li>Acesse apify.com e crie conta (plano $49/mês)</li>
-              <li>Vá em "Settings" → "Integrations"</li>
-              <li>Copie sua API Key (começa com apify_api_...)</li>
-              <li>Cole aqui acima ✅</li>
-            </ol>
-          </div>
-
-          <div>
-            <h3 className="font-semibold mb-2">🆓 SAM.gov (1,000 RFQs/dia - GRÁTIS!):</h3>
-            <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
-              <li>Acesse sam.gov/api e clique em "Get API Key"</li>
-              <li>Cadastro instantâneo, sem custo</li>
-              <li>Copie a API Key enviada por email</li>
-              <li>Cole aqui acima ✅</li>
-            </ol>
-          </div>
-        </CardContent>
-      </Card>
+      {totalCount === 0 && (
+        <Card className="mt-6">
+          <CardContent className="pt-6 text-center text-muted-foreground">
+            <p>Nenhuma credencial encontrada. Execute as migrations do banco de dados.</p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
