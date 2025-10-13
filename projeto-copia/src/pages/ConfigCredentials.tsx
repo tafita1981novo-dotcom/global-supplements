@@ -23,6 +23,7 @@ interface Credential {
   setup_steps?: string[];
   api_docs_url?: string;
   estimated_time_minutes?: number;
+  signup_url?: string;
 }
 
 export default function ConfigCredentials() {
@@ -297,12 +298,12 @@ export default function ConfigCredentials() {
                           </div>
                         </div>
                         <a
-                          href={credential.setup_url}
+                          href={credential.signup_url || credential.setup_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-800 flex items-center gap-1 text-sm"
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
                         >
-                          Documentação <ExternalLink className="h-3 w-3" />
+                          🚀 Criar Conta Aqui <ExternalLink className="h-4 w-4" />
                         </a>
                       </div>
                     </CardHeader>
@@ -340,19 +341,16 @@ export default function ConfigCredentials() {
                                   <p className="text-sm">{step.substring(step.indexOf('.') + 1).trim()}</p>
                                 </div>
                               ))}
-                              {credential.api_docs_url && (
-                                <div className="mt-3 pt-3 border-t">
-                                  <a
-                                    href={credential.api_docs_url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-800"
-                                  >
-                                    <ExternalLink className="h-4 w-4" />
-                                    Abrir Documentação Completa da API
-                                  </a>
-                                </div>
-                              )}
+                              <div className="mt-3 pt-3 border-t">
+                                <a
+                                  href={credential.signup_url || credential.setup_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium w-full justify-center"
+                                >
+                                  ✅ Criar Conta Agora <ExternalLink className="h-4 w-4" />
+                                </a>
+                              </div>
                             </div>
                           </CollapsibleContent>
                         </Collapsible>
