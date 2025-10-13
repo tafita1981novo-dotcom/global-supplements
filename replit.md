@@ -35,21 +35,26 @@ Preferred communication style: Simple, everyday language (Portuguese).
 
 ## Recent Changes
 
-### 2025-10-13: SISTEMA 100% AUTÔNOMO - GPT-4 Controlando Tudo ✅
-- ✅ **Database Schema**: 10 novas tabelas criadas (rfq_inbox, autonomous_runs, ai_decision_state, learning_events, negotiation_strategies, conversation_timelines, payoneer_transactions, financial_alerts, api_negotiations, evolution_metrics)
-- ✅ **Edge Functions**: 3 novas + 2 adaptadas
-  - **learning-engine** (NOVO): GPT-4 aprende com cada negociação e ajusta estratégias
-  - **conversation-intelligence** (NOVO): Timing cultural - sabe quando falar e quando esperar
-  - **payoneer-sync** (NOVO): Controle financeiro em tempo real (ID: 99133638)
-  - **automation-scheduler** (ADAPTADO): Pipeline completo 100 APIs → Normalização → Matching → Timing → Negotiation → Learning → Payoneer
-  - **autonomous-negotiator** (ADAPTADO): Prioriza negociação via API direta (IndiaMART, Alibaba, SAM.gov)
-- ✅ **Pipeline Autônomo Completo**: 100 APIs → rfq_inbox → supplier-matcher → conversation-intelligence → autonomous-negotiator (API-FIRST!) → learning-engine → payoneer-sync
-- ✅ **Zero Mock Data**: Sistema usa 100% dados reais das APIs configuradas
-- ✅ **API-Direct Priority**: Prioriza negociação direta via API (zero humanos)
-- ✅ **Aprendizado Contínuo**: GPT-4 evolui automaticamente analisando cada negociação
-- ✅ **Timing Cultural**: Sistema sabe quando negociar (USA=rápido, Japão=paciente)
-- ✅ **Payoneer Real-time**: Tracking automático de receitas/pagamentos
-- ✅ **Revenue Potencial**: $500K-$2M/mês (Tier 1) | $10M+/mês (100 APIs)
+### 2025-10-13: SISTEMA DE FORNECEDORES + NEGOCIAÇÕES PARALELAS + MONITORAMENTO DE RISCOS ✅
+- ✅ **Database Schema**: 16 novas tabelas (10 anteriores + 6 novas para fornecedores/riscos)
+  - **supplier_apis**: 100+ APIs de fornecedores mapeadas (Alibaba, Global Sources, IndiaMART, Made-in-China)
+  - **supplier_product_mappings**: Produtos confirmados com preços/prazos ANTES de negociar
+  - **parallel_negotiations**: Negociações simultâneas (comprador + múltiplos fornecedores)
+  - **risk_assessments**: GPT-4 analisa riscos, auto-resolve ou aborta
+  - **manual_interventions**: Alertas críticos com botões de ação manual
+  - **supplier_selection_criteria**: Critérios para selecionar melhor fornecedor (comissão 40%, credibilidade 30%, prazo 20%)
+- ✅ **Edge Functions**: 6 novas + 3 adaptadas
+  - **supplier-api-mapper** (NOVO): Mapeia produtos em 100+ APIs de fornecedores, confirma preços/quantidades/prazos
+  - **parallel-negotiation-orchestrator** (NOVO): Negocia com comprador E fornecedores simultaneamente, seleciona melhor fornecedor
+  - **risk-assessment-agent** (NOVO): GPT-4 monitora riscos, auto-resolve, cria alertas com botões, auto-abandona
+  - **learning-engine**, **conversation-intelligence**, **payoneer-sync** (anteriores)
+  - **automation-scheduler** (ATUALIZADO): Pipeline completo incluindo mapeamento de fornecedores e avaliação de riscos
+- ✅ **Novo Pipeline Completo**: RFQs compradores → **Mapear Fornecedores** → **Negociações Paralelas** → **Avaliação de Riscos** → Selecionar melhor fornecedor → Fechar negócio ou abortar
+- ✅ **Dashboard de Riscos** (/risk-monitor): Alertas em tempo real, botões de ação manual, negociações paralelas, histórico de riscos
+- ✅ **Auto-Resolução de Riscos**: GPT-4 tenta resolver automaticamente (buscar fornecedor alternativo, mudar para express delivery)
+- ✅ **Seleção Inteligente de Fornecedores**: Score ponderado (max comissão + credibilidade + prazo + product match)
+- ✅ **Zero Investment Enforcement**: Sistema aborta automaticamente se detectar risco de pagamento antecipado
+- ✅ **Revenue Potencial**: $500K-$2M/mês (Tier 1) | $10M+/mês (100 APIs compradores + 100+ fornecedores)
 
 ## System Architecture
 
@@ -96,11 +101,15 @@ Located at `/automation-dashboard`, provides:
 
 ### System Capabilities
 
--   **100% Autonomous AI Broker**: GPT-4 controla tudo sem humanos - busca RFQs de 100 APIs, match de fornecedores, timing cultural, negociação multi-idioma, aprendizado contínuo, tracking Payoneer. Sistema prioriza negociação direta via API (IndiaMART, Alibaba, SAM.gov).
+-   **100% Autonomous AI Broker**: GPT-4 controla tudo sem humanos - busca RFQs de 100 APIs de compradores, **mapeia produtos em 100+ APIs de fornecedores**, **negociações paralelas** (comprador + fornecedores simultaneamente), **monitoramento de riscos em tempo real**, seleção inteligente do melhor fornecedor, aprendizado contínuo, tracking Payoneer.
+-   **Supplier Mapping System**: Busca produtos em 100+ APIs de fornecedores (Alibaba, Global Sources, IndiaMART, Made-in-China), confirma preços/quantidades/prazos **ANTES** de negociar com comprador, calcula comissão de broker, salva em `supplier_product_mappings`.
+-   **Parallel Negotiations**: Negocia com comprador E múltiplos fornecedores simultaneamente, seleciona melhor fornecedor baseado em score ponderado (comissão 40%, credibilidade 30%, prazo 20%, product match 10%), registra em `parallel_negotiations`.
+-   **Real-Time Risk Assessment**: GPT-4 analisa TODOS os riscos (price mismatch, delivery delay, supplier unreliable, payment risk, compliance, quantity mismatch), **tenta auto-resolver** primeiro, cria **alertas com botões de ação manual** se crítico, **auto-abandona** negociação em 2h se sem resposta. Salva em `risk_assessments` e `manual_interventions`.
+-   **Intelligent Supplier Selection**: Critérios configuráveis em `supplier_selection_criteria` - maximiza comissão, garante credibilidade 70+, entrega antes do prazo, produto 85%+ similar. GPT-4 escolhe fornecedor com maior score ponderado.
 -   **Continuous Learning System**: GPT-4 aprende com cada negociação (sucesso/falha), ajusta estratégias automaticamente, melhora preços e timing, registra lições aprendidas em `learning_events`, evolui `negotiation_strategies` dia a dia.
 -   **Conversation Timing Intelligence**: Sistema detecta quando GPT-4 fez uma PERGUNTA ou OFERTA e aguarda a RESPOSTA antes de falar novamente. Evita spam de mensagens, garante fluxo natural de conversação. Registra em `conversation_timelines`: requires_response=true → espera → response_received → pode falar.
 -   **Payoneer Real-Time Control**: Tracking automático (ID: 99133638) - sincroniza balanço, registra comissões/pagamentos, alertas financeiros, Zero Investment enforcement (nunca paga fornecedor antes do comprador).
--   **Complete Automation Pipeline**: 100 APIs → Normalização rfq_inbox → supplier-matcher → conversation-intelligence → autonomous-negotiator (API-first) → learning-engine → payoneer-sync. Executa a cada 30 min via Cron Job.
+-   **Complete Automation Pipeline**: RFQs (100 APIs) → **Mapear Fornecedores** (100+ APIs) → **Parallel Negotiations** (comprador + fornecedores) → **Risk Assessment** (auto-resolve ou alertar) → **Select Best Supplier** (score ponderado) → **Close Deal** ou Abort. Executa a cada 30 min via Cron Job.
 
 ### Design Trade-offs
 
