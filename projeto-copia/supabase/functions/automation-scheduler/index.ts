@@ -159,8 +159,8 @@ serve(async (req) => {
         }
       });
 
-      // STEP 2: PROCESSAR CADA RFQ - Buscar fornecedores e negociar
-      console.log('🔍 Step 2: Processing RFQs - Finding suppliers and negotiating...');
+      // STEP 2: MAPEAR FORNECEDORES EM 100+ APIS (ANTES de negociar com comprador!)
+      console.log('🏭 Step 2: Mapping suppliers across 100+ APIs - Confirming prices/quantities/delivery...');
       
       // Pegar RFQs novas (priorizar API-direct)
       const { data: newRfqs } = await supabase
@@ -171,112 +171,106 @@ serve(async (req) => {
         .limit(50); // Processar 50 por vez
 
       let rfqsProcessed = 0;
-      let suppliersFound = 0;
-      let negotiationsStarted = 0;
+      let suppliersMapped = 0;
+      let parallelNegotiationsStarted = 0;
+      let risksDetected = 0;
 
       for (const rfq of newRfqs || []) {
         try {
           console.log(`📦 Processing RFQ: ${rfq.product_description} from ${rfq.buyer_name}`);
 
-          // STEP 2A: Buscar fornecedores para este produto
-          const matchResponse = await fetch(`${supabaseUrl}/functions/v1/supplier-matcher`, {
+          // STEP 2A: MAPEAR FORNECEDORES (confirmar preços/quantidades/prazos)
+          const mapResponse = await fetch(`${supabaseUrl}/functions/v1/supplier-api-mapper`, {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${supabaseKey}`,
               'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-              action: 'match_supplier',
-              requirements: {
-                product_name: rfq.product_description,
-                quantity: rfq.quantity || 1000,
-                max_price_per_unit: rfq.budget_usd || 50,
-                max_delivery_days: rfq.deadline ? Math.ceil((new Date(rfq.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : 30,
-                preferred_shipping: 'air',
-                country: rfq.buyer_country
-              }
+              rfq_id: rfq.id,
+              product_name: rfq.product_description,
+              quantity: rfq.quantity || 1000,
+              budget_usd: rfq.budget_usd || 50000,
+              delivery_deadline: rfq.deadline
             })
           });
 
-          const matchData = await matchResponse.json();
+          const mapData = await mapResponse.json();
 
-          if (matchData.success && matchData.best_match) {
-            suppliersFound++;
+          if (mapData.success && mapData.total_suppliers_found > 0) {
+            suppliersMapped += mapData.total_suppliers_found;
             
-            // Atualizar status do RFQ
-            await supabase
-              .from('rfq_inbox')
-              .update({ status: 'matched' })
-              .eq('id', rfq.id);
+            console.log(`✅ Mapped ${mapData.total_suppliers_found} suppliers with confirmed prices`);
 
-            // STEP 2B: Verificar timing - Devemos negociar AGORA ou ESPERAR?
-            const timingResponse = await fetch(`${supabaseUrl}/functions/v1/conversation-intelligence`, {
+            // STEP 2B: NEGOCIAÇÕES PARALELAS (comprador + fornecedores simultaneamente)
+            const parallelNegResponse = await fetch(`${supabaseUrl}/functions/v1/parallel-negotiation-orchestrator`, {
               method: 'POST',
               headers: {
                 'Authorization': `Bearer ${supabaseKey}`,
                 'Content-Type': 'application/json'
               },
               body: JSON.stringify({
-                action: 'decide_timing',
-                rfq_id: rfq.id,
-                buyer_country: rfq.buyer_country
+                rfq_id: rfq.id
               })
             });
 
-            const timingData = await timingResponse.json();
+            const parallelNegData = await parallelNegResponse.json();
 
-            if (timingData.success && timingData.timing_decision?.decision === 'send_now') {
-              // STEP 2C: Iniciar negociação (PRIORIDADE: API direta)
-              const negotiationMethod = rfq.contact_method === 'api' ? 'api' : 'email';
+            if (parallelNegData.success) {
+              parallelNegotiationsStarted++;
               
-              console.log(`🤝 Starting ${negotiationMethod} negotiation for RFQ ${rfq.id}`);
+              console.log(`🤝 Parallel negotiations: Buyer + ${parallelNegData.suppliers_negotiated} suppliers`);
+              console.log(`🎯 Best supplier selected: ${parallelNegData.best_supplier?.name}, Commission: $${parallelNegData.best_supplier?.commission_usd}`);
 
-              const negResponse = await fetch(`${supabaseUrl}/functions/v1/autonomous-negotiator`, {
+              // STEP 2C: AVALIAÇÃO DE RISCOS EM TEMPO REAL
+              const riskResponse = await fetch(`${supabaseUrl}/functions/v1/risk-assessment-agent`, {
                 method: 'POST',
                 headers: {
                   'Authorization': `Bearer ${supabaseKey}`,
                   'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                  action: 'negotiate',
-                  buyer_email: rfq.contact_data?.email || 'contact@example.com',
-                  buyer_company: rfq.buyer_name,
-                  buyer_country: rfq.buyer_country,
-                  supplier_id: matchData.best_match.supplier_id,
-                  product: rfq.product_description,
-                  quantity: rfq.quantity,
-                  target_price: matchData.best_match.price_per_unit,
-                  contact_method: negotiationMethod,
-                  api_endpoint: rfq.contact_data?.api_endpoint,
-                  api_method: rfq.contact_data?.api_method
+                  parallel_negotiation_id: parallelNegData.parallel_negotiation_id
                 })
               });
 
-              const negData = await negResponse.json();
-              
-              if (negData.success) {
-                negotiationsStarted++;
-                
-                // Atualizar RFQ para "negotiating"
-                await supabase
-                  .from('rfq_inbox')
-                  .update({ status: 'negotiating' })
-                  .eq('id', rfq.id);
+              const riskData = await riskResponse.json();
 
-                // Salvar decisão GPT-4
-                await supabase
-                  .from('ai_decision_state')
-                  .insert({
-                    rfq_id: rfq.id,
-                    decision_type: 'start_negotiation',
-                    decision_rationale: `Matched supplier ${matchData.best_match.supplier_name} with ${negotiationMethod} communication`,
-                    context_data: { match: matchData.best_match, timing: timingData.timing_decision },
-                    outcome: 'pending',
-                    confidence_score: 85
-                  });
+              if (riskData.success) {
+                risksDetected += riskData.total_risks_detected || 0;
+                
+                console.log(`🔍 Risk analysis: ${riskData.total_risks_detected} risks, ${riskData.auto_resolved} auto-resolved, ${riskData.requires_manual} manual intervention`);
+
+                if (riskData.recommendation === 'abort') {
+                  console.log(`❌ Deal aborted due to critical risks`);
+                  await supabase
+                    .from('rfq_inbox')
+                    .update({ status: 'aborted' })
+                    .eq('id', rfq.id);
+                } else {
+                  // Atualizar RFQ para "negotiating" se riscos OK
+                  await supabase
+                    .from('rfq_inbox')
+                    .update({ status: 'negotiating' })
+                    .eq('id', rfq.id);
+
+                  // Salvar decisão GPT-4
+                  await supabase
+                    .from('ai_decision_state')
+                    .insert({
+                      rfq_id: rfq.id,
+                      decision_type: 'parallel_negotiation_started',
+                      decision_rationale: `Best supplier: ${parallelNegData.best_supplier?.name}, Score: ${parallelNegData.best_supplier?.total_score}, Risks: ${riskData.total_risks_detected} (${riskData.auto_resolved} resolved)`,
+                      context_data: { 
+                        suppliers_mapped: mapData.total_suppliers_found,
+                        best_supplier: parallelNegData.best_supplier,
+                        risks: riskData.risks 
+                      },
+                      outcome: 'pending',
+                      confidence_score: 90
+                    });
+                }
               }
-            } else {
-              console.log(`⏰ Waiting for optimal timing: ${timingData.timing_decision?.reason}`);
             }
           }
 
@@ -288,12 +282,13 @@ serve(async (req) => {
 
       results.steps.push({
         step: 2,
-        name: 'RFQ Processing - Suppliers & Negotiation',
+        name: 'Supplier Mapping + Parallel Negotiations + Risk Assessment',
         status: 'success',
         data: {
           rfqs_processed: rfqsProcessed,
-          suppliers_found: suppliersFound,
-          negotiations_started: negotiationsStarted,
+          suppliers_mapped: suppliersMapped,
+          parallel_negotiations_started: parallelNegotiationsStarted,
+          risks_detected: risksDetected,
           api_direct_used: newRfqs?.filter(r => r.contact_method === 'api').length || 0
         }
       });
