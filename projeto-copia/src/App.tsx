@@ -69,6 +69,7 @@ import CredentialsManager from "./pages/CredentialsManager";
 import GmailOAuthTest from "./pages/GmailOAuthTest";
 import AutomationDashboard from "./pages/AutomationDashboard";
 import ConfigCredentials from "./pages/ConfigCredentials";
+import AutonomousControlCenter from "./pages/AutonomousControlCenter";
 
 const queryClient = new QueryClient();
 
@@ -308,6 +309,11 @@ const App = () => (
               <Route path="/config-credentials" element={
                 <AppLayout>
                   <ConfigCredentials />
+                </AppLayout>
+              } />
+              <Route path="/autonomous-control" element={
+                <AppLayout>
+                  <AutonomousControlCenter />
                 </AppLayout>
               } />
               
