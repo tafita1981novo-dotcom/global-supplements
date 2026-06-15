@@ -12,3 +12,9 @@ id = "rYXpk08G7eFCxc7rdBIzu"
 uri = "file://projeto-copia/CLAUDE_EXPORT.md"
 type = "text"
 title = "CLAUDE_EXPORT.md — Global Supplements (completo)"
+
+[[outputs]]
+id = "YkEuX-YSZdv0GnK92YZXQ"
+uri = "file://projeto-copia/CLAUDE_EXPORT_PRIVATE.md"
+type = "text"
+title = "CLAUDE_EXPORT_PRIVATE.md — Credenciais + Projeto Completo"

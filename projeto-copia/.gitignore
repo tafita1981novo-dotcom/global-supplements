@@ -31,6 +31,9 @@ dist-ssr
 # Large files
 *.zip
 
+# Private export files — never commit to GitHub
+CLAUDE_EXPORT_PRIVATE.md
+
 # Temporary files
 *.tmp
 *.temp
