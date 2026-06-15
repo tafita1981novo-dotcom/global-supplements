@@ -4,23 +4,6 @@ on:
   push:
     branches: [ main, master ]
   workflow_dispatch:
-  schedule:
-    - cron: '0 0 * * *'
-    - cron: '30 1 * * *'
-    - cron: '0 3 * * *'
-    - cron: '30 4 * * *'
-    - cron: '0 6 * * *'
-    - cron: '30 7 * * *'
-    - cron: '0 9 * * *'
-    - cron: '30 10 * * *'
-    - cron: '0 12 * * *'
-    - cron: '30 13 * * *'
-    - cron: '0 15 * * *'
-    - cron: '30 16 * * *'
-    - cron: '0 18 * * *'
-    - cron: '30 19 * * *'
-    - cron: '0 21 * * *'
-    - cron: '30 22 * * *'
 
 jobs:
   build-and-deploy:
@@ -28,10 +11,10 @@ jobs:
     
     steps:
       - name: Checkout código
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       
       - name: Configurar Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
           cache: 'npm'
@@ -44,7 +27,7 @@ jobs:
       - name: Criar .env
         working-directory: ./projeto-copia
         run: |
-          cat > .env << ENVEOF
+          cat > .env << EOF
           VITE_SUPABASE_URL=https://twglceexfetejawoumsr.supabase.co
           VITE_SUPABASE_ANON_KEY=${{ secrets.VITE_SUPABASE_ANON_KEY }}
           VITE_RAPIDAPI_KEY_1=${{ secrets.RAPIDAPI_KEY }}
@@ -56,20 +39,26 @@ jobs:
           GMAIL_CLIENT_SECRET=${{ secrets.GMAIL_CLIENT_SECRET }}
           GMAIL_REFRESH_TOKEN=${{ secrets.GMAIL_REFRESH_TOKEN }}
           VITE_PAYONEER_ID=99133638
-          ENVEOF
+          EOF
+          # Remover espaços iniciais de cada linha
+          sed -i 's/^          //' .env
+          echo "✅ .env criado:"
+          cat .env | head -3
       
       - name: Build do projeto
         working-directory: ./projeto-copia
         run: npm run build
 
       - name: Criar .htaccess SPA
+        working-directory: ./projeto-copia
         run: |
-          cat > ./projeto-copia/dist/.htaccess << 'HTEOF'
+          cat > dist/.htaccess << 'HTEOF'
           Options -MultiViews
           RewriteEngine On
           RewriteCond %{REQUEST_FILENAME} !-f
           RewriteRule ^ index.html [QSA,L]
           HTEOF
+          sed -i 's/^          //' dist/.htaccess
       
       - name: Deploy via FTP para Hostinger
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
