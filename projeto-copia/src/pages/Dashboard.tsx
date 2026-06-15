@@ -1,740 +1,243 @@
-import React, { useEffect, useState } from 'react';
-import { ResponsiveLayout, ResponsiveGrid, ResponsiveCard, MobileOptimizedHeader } from "@/components/dashboard/ResponsiveLayout";
-import { QuantumSystemStatus } from "@/components/dashboard/QuantumSystemStatus";
-import { ProfitEvolutionChart } from "@/components/dashboard/ProfitEvolutionChart";
-import { MetricsCards } from "@/components/dashboard/MetricsCards";
-import { RecentOpportunities } from "@/components/dashboard/RecentOpportunities";
-import { AIInsights } from "@/components/dashboard/AIInsights";
-import { QAChat } from "@/components/dashboard/QAChat";
-import { NotificationCenter } from "@/components/dashboard/NotificationCenter";
-import B2BBuyerCenter from "@/components/dashboard/B2BBuyerCenter";
-import SalesAnalyticsDashboard from "@/components/dashboard/SalesAnalyticsDashboard";
-import { QuickActions } from "@/components/dashboard/QuickActions";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { 
-  Globe, 
-  TrendingUp, 
-  Activity, 
-  DollarSign,
-  Brain,
-  Zap,
-  Target,
+import {
+  Globe,
+  ShoppingCart,
+  TrendingUp,
+  Package,
+  Heart,
+  Pill,
+  Smartphone,
+  Leaf,
+  Atom,
+  Megaphone,
+  FileText,
   Users,
-  Network,
-  Timer,
-  CheckCircle,
-  AlertTriangle,
-  Rocket,
-  BarChart3,
-  MessageSquare,
-  Bell,
-  Search,
   ExternalLink,
-  FileText
+  Sparkles,
+  BarChart3,
+  Mail,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { useQuantumPersistence } from "@/hooks/useQuantumPersistence";
-import { AlertaCredenciais } from "@/components/dashboard/AlertaCredenciais";
-import RegistrationTracker from "@/components/dashboard/RegistrationTracker";
-import { getSystemMetrics, getAgentStatusList } from "@/services/systemMetrics";
-
-interface RealTimeMetrics {
-  activeDeals: number;
-  totalRevenue: number;
-  successRate: number;
-  avgMargin: number;
-  quantumExecutions: number;
-  aiNegotiations: number;
-  systemHealth: number;
-}
-
-interface LiveSystemStatus {
-  quantumActive: boolean;
-  aiAgentsRunning: number;
-  lastExecution: string;
-  nextScheduledScan: string;
-  currentProfit: number;
-  todayExecutions: number;
-}
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const [realTimeMetrics, setRealTimeMetrics] = useState<RealTimeMetrics>({
-    activeDeals: 0,
-    totalRevenue: 0,
-    successRate: 0,
-    avgMargin: 0,
-    quantumExecutions: 0,
-    aiNegotiations: 0,
-    systemHealth: 0
-  });
 
-  const [liveStatus, setLiveStatus] = useState<LiveSystemStatus>({
-    quantumActive: true, // Active by default
-    aiAgentsRunning: 0,
-    lastExecution: '',
-    nextScheduledScan: '',
-    currentProfit: 0,
-    todayExecutions: 0
-  });
+  const quickLinks = [
+    { label: "Site Público", icon: Globe, path: "/", color: "bg-blue-500" },
+    { label: "Amazon Affiliate", icon: ShoppingCart, path: "/amazon", color: "bg-orange-500" },
+    { label: "Produtos", icon: Package, path: "/products", color: "bg-green-500" },
+    { label: "Bundles", icon: Sparkles, path: "/bundles", color: "bg-purple-500" },
+    { label: "Marketing", icon: Megaphone, path: "/marketing-dashboard", color: "bg-pink-500" },
+    { label: "AI Content", icon: FileText, path: "/ai-content-generator", color: "bg-indigo-500" },
+    { label: "Google Ads", icon: BarChart3, path: "/google-ads-campaigns", color: "bg-yellow-600" },
+    { label: "Fornecedores", icon: Users, path: "/suppliers", color: "bg-teal-500" },
+  ];
 
-  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+  const categories = [
+    { label: "Beauty Supplements", icon: Heart, path: "/beauty-supplements", color: "text-pink-500" },
+    { label: "Quantum Materials", icon: Atom, path: "/quantum-materials", color: "text-purple-500" },
+    { label: "Medical Grade", icon: Pill, path: "/medical-grade", color: "text-blue-500" },
+    { label: "Smart Gadgets", icon: Smartphone, path: "/smart-gadgets", color: "text-gray-600" },
+    { label: "Traditional Wellness", icon: Leaf, path: "/traditional-wellness", color: "text-green-500" },
+  ];
 
-  useEffect(() => {
-    loadDashboardData();
-    
-    // Update every 5 seconds for real-time feel
-    const interval = setInterval(() => {
-      loadDashboardData();
-      setLastUpdate(new Date());
-    }, 5000);
-    
-    return () => clearInterval(interval);
-  }, []);
-
-  const loadDashboardData = async () => {
-    try {
-      // ============================================
-      // DADOS REAIS DO SISTEMA DE BROKER B2B
-      // ============================================
-      
-      // 1. Opportunities ativas (produtos Amazon detectados)
-      const { data: opportunities } = await supabase
-        .from('opportunities')
-        .select('*')
-        .eq('status', 'approved');
-      
-      // 2. Amazon Products (fonte real de produtos)
-      const { data: amazonProducts } = await (supabase as any)
-        .from('amazon_products')
-        .select('*');
-      
-      // 3. B2B Connections (conexões estabelecidas)
-      const { data: connections } = await (supabase as any)
-        .from('b2b_connections')
-        .select('*');
-      
-      // 4. Profits (receita real e comissões)
-      const { data: profits } = await (supabase as any)
-        .from('profits')
-        .select('*');
-      
-      // 5. Execution history (tracking de execuções)
-      const { data: executions } = await supabase
-        .from('execution_history')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(1);
-
-      // CÁLCULO DE MÉTRICAS REAIS
-      const activeDeals = connections?.filter(c => c.status === 'active').length || 0;
-      const totalRevenue = profits?.reduce((sum, p) => sum + (p.total_profit || 0), 0) || 0;
-      const totalOpportunities = opportunities?.length || 0;
-      const totalProducts = amazonProducts?.length || 0;
-      const successRate = connections && connections.length > 0
-        ? ((connections.filter(c => c.status === 'completed').length / connections.length) * 100).toFixed(1)
-        : 0;
-
-      setRealTimeMetrics({
-        activeDeals: activeDeals,
-        totalRevenue: totalRevenue,
-        successRate: Number(successRate),
-        avgMargin: totalOpportunities > 0 ? Number((totalRevenue / totalOpportunities).toFixed(2)) : 0,
-        quantumExecutions: totalProducts,
-        aiNegotiations: connections?.length || 0,
-        systemHealth: 100 // System is healthy if running
-      });
-
-      // Status do sistema com dados reais
-      const lastExecution = executions?.[0]?.created_at || new Date().toISOString();
-      
-      setLiveStatus(prev => ({
-        ...prev,
-        lastExecution: new Date(lastExecution).toLocaleTimeString(),
-        nextScheduledScan: new Date(Date.now() + 21600000).toLocaleTimeString(), // Next scan in 6h
-        currentProfit: totalRevenue,
-        todayExecutions: activeDeals,
-        aiAgentsRunning: activeDeals // Active connections = active AI agents
-      }));
-
-    } catch (error) {
-      console.error('Error loading dashboard data:', error);
-    }
-  };
-
-  const triggerQuantumScan = async () => {
-    try {
-      toast.info("🚀 Running full quantum scan...");
-      
-      const { data } = await supabase.functions.invoke('quantum-market-scanner', {
-        body: {
-          action: 'quantum_scan',
-          enhance_with_ai: true,
-          real_time_execution: true
-        }
-      });
-
-      if (data?.opportunities) {
-        toast.success(`✅ ${data.opportunities.length} opportunities detected and processing`);
-        loadDashboardData();
-      }
-    } catch (error) {
-      console.error('Quantum scan error:', error);
-      toast.error("❌ Quantum scan error");
-    }
-  };
-
-  const goToSite = () => {
-    navigate('/site');
-  };
+  const siteLinks = [
+    { label: "Parcerias Globais", path: "/global-partnerships" },
+    { label: "Catálogo Premium", path: "/premium-portfolio" },
+    { label: "Enterprise Solutions", path: "/enterprise-solutions" },
+    { label: "B2B Distribution", path: "/b2b" },
+    { label: "B2B Solutions", path: "/b2b-solutions" },
+    { label: "Market Intelligence", path: "/market-intelligence" },
+    { label: "Contratos Governamentais", path: "/government-contracts" },
+    { label: "Manufacturing", path: "/manufacturing" },
+    { label: "Research & Development", path: "/research-development" },
+    { label: "Compliance", path: "/compliance" },
+    { label: "Logística", path: "/logistics" },
+    { label: "Pre-Order Policy", path: "/pre-order-policy" },
+  ];
 
   return (
-    <ResponsiveLayout>
-      {/* Mobile-optimized header */}
-      <MobileOptimizedHeader
-        title="Global Executive Dashboard"
-        subtitle={`Quantum system active • ${liveStatus.aiAgentsRunning} AI agents running • Last update: ${lastUpdate.toLocaleTimeString()}`}
-        actions={
-          <div className="flex flex-col sm:flex-row gap-2">
-            <Button onClick={goToSite} variant="outline" size="sm">
-              <Globe className="h-4 w-4 mr-2" />
-              Premium Site
-            </Button>
-            <Button onClick={triggerQuantumScan} className="bg-gradient-to-r from-primary to-primary/80">
-              <Search className="h-4 w-4 mr-2" />
-              Quantum Scan
-            </Button>
-          </div>
-        }
-      />
+    <div className="container mx-auto py-8 px-4 space-y-8">
 
-      {/* Alerta de Credenciais - Primeira seção crítica */}
-      <AlertaCredenciais />
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold">
+            <span className="text-gray-900">Global </span>
+            <span className="text-yellow-500">Supplements</span>
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Beauty · Quantum · Medical · Gadgets · Wellness
+          </p>
+        </div>
+        <div className="flex gap-3">
+          <Button variant="outline" onClick={() => navigate("/amazon")}>
+            <ShoppingCart className="h-4 w-4 mr-2" />
+            Amazon Affiliate
+          </Button>
+          <Button onClick={() => navigate("/")} className="bg-yellow-500 hover:bg-yellow-600 text-black">
+            <Globe className="h-4 w-4 mr-2" />
+            Ver Site
+          </Button>
+        </div>
+      </div>
 
-      {/* Agentes IA Ativos - Monitoramento */}
-      <Card className="bg-gradient-to-br from-green-50 via-green-25 to-background dark:from-green-950/30 dark:via-green-900/20 border-green-200">
+      {/* Quick Access */}
+      <Card>
         <CardHeader>
-          <div className="flex items-center gap-2">
-            <Zap className="h-5 w-5 text-green-600" />
-            <CardTitle className="text-green-800 dark:text-green-200">
-              ⚡ Agentes IA Ativos - Monitoramento
-            </CardTitle>
-          </div>
-          <CardDescription className="text-green-700 dark:text-green-300">
-            Sistema inteligente detectando oportunidades em tempo real
-          </CardDescription>
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-blue-500" />
+            Acesso Rápido
+          </CardTitle>
+          <CardDescription>Principais seções do projeto</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg border">
-              <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-              <span className="font-medium">Monitor SAM.gov</span>
-            </div>
-            <div className="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg border">
-              <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-              <span className="font-medium">Monitor Alibaba</span>
-            </div>
-            <div className="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg border">
-              <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-              <span className="font-medium">Detector de Arbitragem</span>
-            </div>
+        <CardContent>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {quickLinks.map((link) => (
+              <button
+                key={link.path}
+                onClick={() => navigate(link.path)}
+                className="flex flex-col items-center gap-2 p-4 rounded-xl border hover:shadow-md transition-all hover:scale-105 bg-card"
+              >
+                <div className={`w-10 h-10 rounded-lg ${link.color} flex items-center justify-center`}>
+                  <link.icon className="h-5 w-5 text-white" />
+                </div>
+                <span className="text-xs font-medium text-center">{link.label}</span>
+              </button>
+            ))}
           </div>
         </CardContent>
       </Card>
 
-      {/* System Status Alert */}
-      <Alert className="border-green-500 bg-green-50 dark:bg-green-950/30">
-        <CheckCircle className="h-4 w-4 text-green-600" />
-        <AlertDescription className="text-green-800 dark:text-green-200">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <strong>SISTEMA QUÂNTICO OPERACIONAL:</strong> {liveStatus.aiAgentsRunning} agentes IA ativos, 
-              {realTimeMetrics.quantumExecutions} execuções históricas, próximo scan em {liveStatus.nextScheduledScan}
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <span className="text-sm font-medium">LIVE</span>
-            </div>
-          </div>
-        </AlertDescription>
-      </Alert>
-
-      {/* Real-time Key Metrics - Always visible */}
-      <ResponsiveGrid cols={{ mobile: 1, tablet: 2, desktop: 4 }}>
-        <ResponsiveCard priority="high">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Negócios Ativos</p>
-                <p className="text-3xl font-bold text-blue-600">{realTimeMetrics.activeDeals}</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Total histórico acumulado
-                </p>
-              </div>
-              <div className="h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-                <Target className="h-6 w-6 text-blue-600" />
-              </div>
-            </div>
-            <Progress value={Math.min(realTimeMetrics.activeDeals * 10, 100)} className="mt-4" />
-          </CardContent>
-        </ResponsiveCard>
-
-        <ResponsiveCard priority="high">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Lucro Total (Histórico)</p>
-                <p className="text-3xl font-bold text-green-600">
-                  ${(liveStatus.currentProfit / 1000).toFixed(0)}K
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {liveStatus.todayExecutions} execuções históricas
-                </p>
-              </div>
-              <div className="h-12 w-12 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
-                <DollarSign className="h-6 w-6 text-green-600" />
-              </div>
-            </div>
-            <Progress value={Math.min(liveStatus.currentProfit / 1000, 100)} className="mt-4" />
-          </CardContent>
-        </ResponsiveCard>
-
-        <ResponsiveCard priority="high">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">IA Quântica</p>
-                <p className="text-3xl font-bold text-purple-600">{realTimeMetrics.successRate.toFixed(1)}%</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Taxa de sucesso em tempo real
-                </p>
-              </div>
-              <div className="h-12 w-12 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
-                <Brain className="h-6 w-6 text-purple-600" />
-              </div>
-            </div>
-            <Progress value={realTimeMetrics.successRate} className="mt-4" />
-          </CardContent>
-        </ResponsiveCard>
-
-        <ResponsiveCard priority="high">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Saúde do Sistema</p>
-                <p className="text-3xl font-bold text-orange-600">{realTimeMetrics.systemHealth.toFixed(1)}%</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {liveStatus.aiAgentsRunning} agentes operacionais
-                </p>
-              </div>
-              <div className="h-12 w-12 rounded-full bg-orange-100 dark:bg-orange-900 flex items-center justify-center">
-                <Activity className="h-6 w-6 text-orange-600" />
-              </div>
-            </div>
-            <Progress value={realTimeMetrics.systemHealth} className="mt-4" />
-          </CardContent>
-        </ResponsiveCard>
-      </ResponsiveGrid>
-
-      {/* Métricas Acumuladas Totais - Cards adicionais */}
-      <ResponsiveCard fullWidth priority="medium">
+      {/* Product Categories */}
+      <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <BarChart3 className="h-5 w-5 text-blue-600" />
-            Métricas Acumuladas Totais
+            <Package className="h-5 w-5 text-green-500" />
+            Categorias de Produtos
           </CardTitle>
-          <CardDescription>
-            Dados históricos e totais acumulados do sistema
-          </CardDescription>
+          <CardDescription>Linhas de produtos disponíveis no catálogo</CardDescription>
         </CardHeader>
         <CardContent>
-          <MetricsCards />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            {categories.map((cat) => (
+              <button
+                key={cat.path}
+                onClick={() => navigate(cat.path)}
+                className="flex items-center gap-3 p-4 rounded-xl border hover:shadow-md transition-all hover:bg-muted text-left"
+              >
+                <cat.icon className={`h-6 w-6 flex-shrink-0 ${cat.color}`} />
+                <span className="text-sm font-medium">{cat.label}</span>
+              </button>
+            ))}
+          </div>
         </CardContent>
-      </ResponsiveCard>
+      </Card>
 
-      {/* Profit Evolution Chart - Full visibility */}
-      <ResponsiveCard fullWidth priority="high">
-        <ProfitEvolutionChart />
-      </ResponsiveCard>
+      {/* All Site Pages */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Globe className="h-5 w-5 text-purple-500" />
+            Todas as Páginas do Site
+          </CardTitle>
+          <CardDescription>Navegação completa do globalsupplements.site</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-2">
+            {siteLinks.map((link) => (
+              <Badge
+                key={link.path}
+                variant="outline"
+                className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors px-3 py-1.5 text-sm"
+                onClick={() => navigate(link.path)}
+              >
+                <ExternalLink className="h-3 w-3 mr-1.5" />
+                {link.label}
+              </Badge>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Main Dashboard Sections */}
-      <ResponsiveGrid cols={{ mobile: 1, tablet: 1, desktop: 2 }}>
-        {/* Left Column */}
-        <div className="space-y-6">
-          {/* Recent Opportunities */}
-          <ResponsiveCard priority="medium">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Rocket className="h-5 w-5 text-blue-600" />
-                Oportunidades Recentes
-              </CardTitle>
-              <CardDescription>
-                Oportunidades detectadas e processadas automaticamente
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <RecentOpportunities />
-            </CardContent>
-          </ResponsiveCard>
-
-          {/* AI Insights */}
-          <ResponsiveCard priority="medium">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Brain className="h-5 w-5 text-purple-600" />
-                Insights da IA
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <AIInsights />
-            </CardContent>
-          </ResponsiveCard>
-
-          {/* B2B Buyer Center */}
-          <ResponsiveCard priority="medium">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-green-600" />
-                Centro de Compradores B2B
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <B2BBuyerCenter />
-            </CardContent>
-          </ResponsiveCard>
-        </div>
-
-        {/* Right Column */}
-        <div className="space-y-6">
-          {/* Quick Actions */}
-          <ResponsiveCard priority="medium">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Zap className="h-5 w-5 text-yellow-600" />
-                Ações Rápidas
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <QuickActions />
-            </CardContent>
-          </ResponsiveCard>
-
-          {/* Notification Center */}
-          <ResponsiveCard priority="medium">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Bell className="h-5 w-5 text-red-600" />
-                Central de Notificações
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <NotificationCenter />
-            </CardContent>
-          </ResponsiveCard>
-
-          {/* QA Chat */}
-          <ResponsiveCard priority="low">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="h-5 w-5 text-blue-600" />
-                Assistente IA
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <QAChat />
-            </CardContent>
-          </ResponsiveCard>
-        </div>
-      </ResponsiveGrid>
-
-      {/* SISTEMA QUÂNTICO COMPLETO - Visível na tela principal */}
-      <div className="space-y-8 mt-8">
-        <div className="text-center mb-8">
-          <h2 className="text-4xl font-bold bg-gradient-to-r from-purple-600 via-blue-600 to-green-600 bg-clip-text text-transparent">
-            🚀 SISTEMA QUÂNTICO DE ARBITRAGEM B2B 2025
-          </h2>
-          <p className="text-lg text-muted-foreground mt-2">
-            Inteligência Artificial Avançada Gerando Milhões Automaticamente
-          </p>
-        </div>
-        
-        <QuantumSystemStatus />
-
-        {/* Explicação Detalhada do Sistema */}
-        <Card className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 border-indigo-200">
-          <CardHeader>
-            <CardTitle className="text-2xl text-indigo-800 dark:text-indigo-200 flex items-center gap-2">
-              🧠 Como Funciona a Inteligência Quântica
-            </CardTitle>
-            <CardDescription className="text-lg text-indigo-700 dark:text-indigo-300">
-              Entenda como o sistema detecta e executa oportunidades automaticamente
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="text-center p-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm border">
-                <div className="text-4xl mb-4">🔍</div>
-                <h3 className="font-bold text-lg mb-2">1. VARREDURA</h3>
-                <p className="text-sm text-muted-foreground">
-                  IA monitora 47 mercados globais 24/7, processando $7.8 trilhões em volume B2B
-                </p>
+      {/* Marketing & Tools */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card
+          className="cursor-pointer hover:shadow-md transition-shadow border-pink-200 bg-pink-50 dark:bg-pink-950/20"
+          onClick={() => navigate("/marketing-dashboard")}
+        >
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-pink-500 flex items-center justify-center">
+                <Mail className="h-6 w-6 text-white" />
               </div>
-              <div className="text-center p-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm border">
-                <div className="text-4xl mb-4">⚡</div>
-                <h3 className="font-bold text-lg mb-2">2. DETECÇÃO</h3>
-                <p className="text-sm text-muted-foreground">
-                  Identifica oportunidades com 94.7% de precisão usando algoritmos quânticos
-                </p>
-              </div>
-              <div className="text-center p-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm border">
-                <div className="text-4xl mb-4">🤖</div>
-                <h3 className="font-bold text-lg mb-2">3. NEGOCIAÇÃO</h3>
-                <p className="text-sm text-muted-foreground">
-                  IA conduz negociações automáticas com 84.7% de taxa de sucesso
-                </p>
-              </div>
-              <div className="text-center p-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm border">
-                <div className="text-4xl mb-4">💰</div>
-                <h3 className="font-bold text-lg mb-2">4. EXECUÇÃO</h3>
-                <p className="text-sm text-muted-foreground">
-                  Completa transações em média de 2.3ms, transferindo lucros para Payoneer
-                </p>
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border">
-              <h4 className="font-bold text-lg mb-4 text-center">📊 Setores Mais Lucrativos Detectados em 2025</h4>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                  <div className="text-2xl font-bold text-purple-600">156.7%</div>
-                  <div className="text-sm font-medium">Hardware Quantum</div>
-                  <div className="text-xs text-muted-foreground">Margem média</div>
-                </div>
-                <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600">67.8%</div>
-                  <div className="text-sm font-medium">Semicondutores</div>
-                  <div className="text-xs text-muted-foreground">Margem média</div>
-                </div>
-                <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                  <div className="text-2xl font-bold text-green-600">52.6%</div>
-                  <div className="text-sm font-medium">Energia Renovável</div>
-                  <div className="text-xs text-muted-foreground">Margem média</div>
-                </div>
+              <div>
+                <p className="font-semibold">Email & Social</p>
+                <p className="text-sm text-muted-foreground">SendGrid + Buffer</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Status em Tempo Real */}
-        <Card className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-950/30 dark:to-blue-950/30 border-green-200">
-          <CardHeader>
-            <CardTitle className="text-2xl text-green-800 dark:text-green-200 flex items-center gap-2">
-              🔄 O Que o Sistema Está Fazendo AGORA
-            </CardTitle>
-            <CardDescription className="text-lg text-green-700 dark:text-green-300">
-              Acompanhe as ações automáticas em tempo real
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-3">
-                  <h4 className="font-semibold text-lg">🔍 Monitoramento Ativo:</h4>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg">
-                      <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                      <span className="text-sm">SAM.gov - Contratos governamentais</span>
-                    </div>
-                    <div className="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg">
-                      <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                      <span className="text-sm">Alibaba B2B - Fornecedores globais</span>
-                    </div>
-                    <div className="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg">
-                      <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                      <span className="text-sm">Mercados de semicondutores</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  <h4 className="font-semibold text-lg">🎯 Últimas Ações:</h4>
-                  <div className="space-y-2">
-                    <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                      <div className="text-sm font-medium">Oportunidade detectada</div>
-                      <div className="text-xs text-muted-foreground">Hardware Quantum - Margem 156%</div>
-                    </div>
-                    <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-                      <div className="text-sm font-medium">Negociação iniciada</div>
-                      <div className="text-xs text-muted-foreground">IA enviou proposta automática</div>
-                    </div>
-                    <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                      <div className="text-sm font-medium">Lucro executado</div>
-                      <div className="text-xs text-muted-foreground">$25,000 transferido para Payoneer</div>
-                    </div>
-                  </div>
-                </div>
+        <Card
+          className="cursor-pointer hover:shadow-md transition-shadow border-indigo-200 bg-indigo-50 dark:bg-indigo-950/20"
+          onClick={() => navigate("/ai-content-generator")}
+        >
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-indigo-500 flex items-center justify-center">
+                <Sparkles className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <p className="font-semibold">AI Content</p>
+                <p className="text-sm text-muted-foreground">GPT-4 · 14 idiomas</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Guia Passo a Passo */}
-        <Card className="bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-950/30 dark:to-red-950/30 border-orange-200">
-          <CardHeader>
-            <CardTitle className="text-2xl text-orange-800 dark:text-orange-200 flex items-center gap-2">
-              📋 Como Maximizar Seus Lucros - Guia Completo
-            </CardTitle>
-            <CardDescription className="text-lg text-orange-700 dark:text-orange-300">
-              Siga estes passos para otimizar o sistema e gerar mais receita
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="space-y-4">
-                <h4 className="font-bold text-lg">⚡ Configuração Inicial (Obrigatório):</h4>
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3 p-4 bg-white dark:bg-gray-800 rounded-lg border-l-4 border-red-500">
-                    <div className="w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center font-bold text-sm">1</div>
-                    <div>
-                      <div className="font-semibold">Configure sua conta Payoneer</div>
-                      <div className="text-sm text-muted-foreground">Necessário para receber os lucros automaticamente</div>
-                      <Button size="sm" variant="outline" className="mt-2">
-                        <ExternalLink className="h-4 w-4 mr-2" />
-                        Configurar Agora
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3 p-4 bg-white dark:bg-gray-800 rounded-lg border-l-4 border-yellow-500">
-                    <div className="w-8 h-8 bg-yellow-500 text-white rounded-full flex items-center justify-center font-bold text-sm">2</div>
-                    <div>
-                      <div className="font-semibold">Complete registro SAM.gov</div>
-                      <div className="text-sm text-muted-foreground">Desbloqueie contratos governamentais de $200K+/ano</div>
-                      <Button size="sm" variant="outline" className="mt-2">
-                        <ExternalLink className="h-4 w-4 mr-2" />
-                        Registrar
-                      </Button>
-                    </div>
-                  </div>
-                </div>
+        <Card
+          className="cursor-pointer hover:shadow-md transition-shadow border-yellow-200 bg-yellow-50 dark:bg-yellow-950/20"
+          onClick={() => navigate("/google-ads-campaigns")}
+        >
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-yellow-500 flex items-center justify-center">
+                <BarChart3 className="h-6 w-6 text-white" />
               </div>
-
-              <div className="space-y-4">
-                <h4 className="font-bold text-lg">🚀 Otimização Avançada:</h4>
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3 p-4 bg-white dark:bg-gray-800 rounded-lg border-l-4 border-blue-500">
-                    <div className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-sm">3</div>
-                    <div>
-                      <div className="font-semibold">Conecte conta Alibaba B2B</div>
-                      <div className="text-sm text-muted-foreground">Expanda para arbitragem de produtos físicos</div>
-                      <Button size="sm" variant="outline" className="mt-2">
-                        <ExternalLink className="h-4 w-4 mr-2" />
-                        Conectar
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3 p-4 bg-white dark:bg-gray-800 rounded-lg border-l-4 border-green-500">
-                    <div className="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center font-bold text-sm">4</div>
-                    <div>
-                      <div className="font-semibold">Ative Motor Quântico</div>
-                      <div className="text-sm text-muted-foreground">Vá para "Quantum Arbitrage Engine" no menu</div>
-                      <Button size="sm" variant="outline" className="mt-2">
-                        <Zap className="h-4 w-4 mr-2" />
-                        Ativar
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6 p-4 bg-gradient-to-r from-green-100 to-blue-100 dark:from-green-900/20 dark:to-blue-900/20 rounded-lg">
-              <div className="text-center">
-                <h4 className="font-bold text-lg mb-2">💰 Potencial de Lucro Estimado</h4>
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-green-600">$50K/mês</div>
-                    <div className="text-sm text-muted-foreground">Configuração básica</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-blue-600">$200K/mês</div>
-                    <div className="text-sm text-muted-foreground">Com SAM.gov</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-purple-600">$500K+/mês</div>
-                    <div className="text-sm text-muted-foreground">Sistema completo</div>
-                  </div>
-                </div>
+              <div>
+                <p className="font-semibold">Google Ads</p>
+                <p className="text-sm text-muted-foreground">13 marketplaces</p>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Sales Analytics Dashboard */}
-      <ResponsiveCard fullWidth priority="medium">
+      {/* Settings */}
+      <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <BarChart3 className="h-5 w-5 text-indigo-600" />
-            Analytics de Vendas Completo
-          </CardTitle>
-          <CardDescription>
-            Análise detalhada de performance e resultados
-          </CardDescription>
+          <CardTitle className="text-sm text-muted-foreground">Configurações</CardTitle>
         </CardHeader>
         <CardContent>
-          <SalesAnalyticsDashboard />
+          <div className="flex flex-wrap gap-2">
+            {[
+              { label: "Credenciais", path: "/credentials-manager" },
+              { label: "Setup de APIs", path: "/api-setup" },
+              { label: "Settings", path: "/settings" },
+              { label: "Documentos", path: "/company-documents" },
+              { label: "Registros", path: "/registration-details" },
+            ].map((item) => (
+              <Button key={item.path} variant="outline" size="sm" onClick={() => navigate(item.path)}>
+                {item.label}
+              </Button>
+            ))}
+          </div>
         </CardContent>
-      </ResponsiveCard>
+      </Card>
 
-      {/* Registration Tracker */}
-      <ResponsiveCard fullWidth priority="high">
-        <RegistrationTracker />
-        <div className="mt-4 px-6 pb-6 space-y-3">
-          <Button 
-            onClick={() => navigate('/registration-details')} 
-            className="w-full"
-            variant="outline"
-          >
-            <ExternalLink className="h-4 w-4 mr-2" />
-            Ver Todos os Detalhes dos Registros
-          </Button>
-          <Button 
-            onClick={() => navigate('/company-documents')} 
-            className="w-full"
-            variant="secondary"
-          >
-            <FileText className="h-4 w-4 mr-2" />
-            Gerenciar Documentos da Empresa
-          </Button>
-        </div>
-      </ResponsiveCard>
-
-      {/* System Performance Footer */}
-      <div className="mt-8 p-4 bg-muted/50 rounded-lg">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <span>Sistema Online</span>
-            </div>
-            <span>•</span>
-            <span>Última atualização: {lastUpdate.toLocaleTimeString()}</span>
-            <span>•</span>
-            <span>{liveStatus.aiAgentsRunning} agentes IA ativos</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <span>Próximo scan automático: {liveStatus.nextScheduledScan}</span>
-            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-              Quantum: ATIVO
-            </Badge>
-          </div>
-        </div>
-      </div>
-    </ResponsiveLayout>
+    </div>
   );
 }

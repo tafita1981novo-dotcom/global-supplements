@@ -9,37 +9,24 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { 
-  BarChart3, 
-  Brain, 
-  Cpu,
-  Building2, 
-  Globe, 
-  Package, 
-  Settings, 
-  TrendingUp, 
+import {
+  BarChart3,
+  Globe,
+  Package,
+  Settings,
+  TrendingUp,
   Users,
   Key,
-  Activity,
   Shield,
-  Rocket,
-  Zap,
   FileText,
-  Database,
   ExternalLink,
-  Crown,
   Handshake,
-  Gavel,
   BookOpen,
-  DollarSign,
   Megaphone,
-  CheckCircle2,
   ShoppingCart,
   Truck,
   Sparkles,
   Target,
-  Network,
-  Layers,
   Heart,
   Atom,
   Pill,
@@ -48,11 +35,11 @@ import {
   Factory,
   FlaskConical,
   ShoppingBag,
-  Award,
   Briefcase,
   ClipboardList,
   Mail,
-  Code
+  Building2,
+  Award,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -64,201 +51,64 @@ export function AppSidebar() {
 
   const menuItems = [
     // ==========================================
-    // 📊 DASHBOARDS & ANALYTICS (6)
+    // 🌐 SITE PÚBLICO
     // ==========================================
     {
-      title: "━━━━ 📊 DASHBOARDS ━━━━",
-      icon: BarChart3,
-      url: "#dashboards",
+      title: "━━━━ 🌐 SITE PÚBLICO ━━━━",
+      icon: Globe,
+      url: "#public",
     },
     {
-      title: "📊 Dashboard Principal",
-      icon: BarChart3,
-      url: "/dashboard",
+      title: "🏠 Home",
+      icon: Globe,
+      url: "/",
     },
     {
-      title: "💰 Live Profit Dashboard",
-      icon: DollarSign,
-      url: "/live-profit",
-    },
-    {
-      title: "🤝 Broker Dashboard",
-      icon: Users,
-      url: "/broker-dashboard",
-    },
-    {
-      title: "📢 Marketing Dashboard",
-      icon: Megaphone,
-      url: "/marketing-dashboard",
-    },
-    {
-      title: "✅ Validation Monitor",
-      icon: CheckCircle2,
-      url: "/validation-monitor",
-    },
-    {
-      title: "📈 Advanced Market Intelligence",
-      icon: TrendingUp,
-      url: "/advanced-market-intelligence",
-    },
-
-    // ==========================================
-    // 🤝 B2B OPERATIONS (7)
-    // ==========================================
-    {
-      title: "━━━━ 🤝 B2B OPERATIONS ━━━━",
+      title: "🤝 Parcerias Globais",
       icon: Handshake,
-      url: "#b2b",
+      url: "/global-partnerships",
     },
     {
-      title: "🎯 Opportunities",
-      icon: Target,
-      url: "/opportunities",
+      title: "⭐ Catálogo Premium",
+      icon: Award,
+      url: "/premium-portfolio",
     },
     {
-      title: "🤝 Centro de Compradores B2B",
-      icon: Handshake,
-      url: "/b2b-buyers-info",
-    },
-    {
-      title: "📖 Guia Completo de Compradores B2B",
-      icon: BookOpen,
-      url: "/b2b-buyer-guide",
-    },
-    {
-      title: "🏢 Suppliers",
-      icon: Building2,
-      url: "/suppliers",
-    },
-    {
-      title: "💼 B2B Solutions",
+      title: "💼 Soluções Enterprise",
       icon: Briefcase,
-      url: "/b2b-solutions",
+      url: "/enterprise-solutions",
     },
     {
-      title: "🚚 B2B Distribution",
+      title: "📦 Produtos",
+      icon: Package,
+      url: "/products",
+    },
+    {
+      title: "🎁 Bundles",
+      icon: ShoppingBag,
+      url: "/bundles",
+    },
+    {
+      title: "📋 Política de Pré-Venda",
+      icon: ClipboardList,
+      url: "/pre-order-policy",
+    },
+    {
+      title: "🏭 B2B Distribution",
       icon: Truck,
       url: "/b2b",
-    },
-    {
-      title: "🔬 Mycogenesis Products",
-      icon: FlaskConical,
-      url: "/mycogenesis",
-    },
-
-    // ==========================================
-    // 🤖 AUTOMATED SYSTEMS (12)
-    // ==========================================
-    {
-      title: "━━━━ 🤖 AUTOMATION ━━━━",
-      icon: Rocket,
-      url: "#automation",
-    },
-    {
-      title: "🚀 Execução Automática",
-      icon: Rocket,
-      url: "/auto-execution",
-    },
-    {
-      title: "⚡ Sistema Quântico Completo",
-      icon: Zap,
-      url: "/quantum-system-complete",
-    },
-    {
-      title: "🎯 Quantum Opportunities",
-      icon: Target,
-      url: "/quantum-opportunities",
-    },
-    {
-      title: "⚡ Motor Arbitragem Quântica",
-      icon: Zap,
-      url: "/quantum-arbitrage-engine",
-    },
-    {
-      title: "🔥 Executor Tempo Real Quântico",
-      icon: Activity,
-      url: "/quantum-real-time-executor",
-    },
-    {
-      title: "🤖 AI Quantum Engine",
-      icon: Brain,
-      url: "/ai-system",
-    },
-    {
-      title: "⚡ Arbitragem Tempo Real",
-      icon: Activity,
-      url: "/realtime-arbitrage",
-    },
-    {
-      title: "💰 Zero Investment Engine",
-      icon: DollarSign,
-      url: "/zero-investment",
-    },
-    {
-      title: "✅ Implementação Prática",
-      icon: CheckCircle2,
-      url: "/practical-implementation",
-    },
-    {
-      title: "📈 Progressive Strategy",
-      icon: TrendingUp,
-      url: "/progressive-strategy",
-    },
-    {
-      title: "👑 Quantum Distributorship",
-      icon: Crown,
-      url: "/quantum-distributorship",
-    },
-    {
-      title: "🚀 Sistema Automatizado",
-      icon: Zap,
-      url: "/automated-distributor",
-    },
-
-    // ==========================================
-    // 🌍 MARKET INTELLIGENCE (6)
-    // ==========================================
-    {
-      title: "━━━━ 🌍 MARKET INTEL ━━━━",
-      icon: Globe,
-      url: "#market",
     },
     {
       title: "📊 Market Intelligence",
       icon: TrendingUp,
       url: "/market-intelligence",
     },
-    {
-      title: "📈 Market Intelligence Category",
-      icon: BarChart3,
-      url: "/market-intelligence-category",
-    },
-    {
-      title: "🛒 Amazon Products",
-      icon: ShoppingCart,
-      url: "/amazon",
-    },
-    {
-      title: "🏪 Canton Fair Tracker",
-      icon: Globe,
-      url: "/canton-fair",
-    },
-    {
-      title: "🏢 Base de Fornecedores Globais",
-      icon: Network,
-      url: "/major-suppliers",
-    },
-    {
-      title: "💼 Contratos Distribuição Global",
-      icon: Handshake,
-      url: "/global-distribution-contracts",
-    },
 
     // ==========================================
-    // 📦 PRODUCT CATEGORIES (7)
+    // 📦 CATEGORIAS DE PRODUTOS
     // ==========================================
     {
-      title: "━━━━ 📦 PRODUCTS ━━━━",
+      title: "━━━━ 📦 PRODUTOS ━━━━",
       icon: Package,
       url: "#products",
     },
@@ -288,6 +138,54 @@ export function AppSidebar() {
       url: "/traditional-wellness",
     },
     {
+      title: "🔬 Mycogenesis",
+      icon: FlaskConical,
+      url: "/mycogenesis",
+    },
+
+    // ==========================================
+    // 🛒 AMAZON AFFILIATE
+    // ==========================================
+    {
+      title: "━━━━ 🛒 AMAZON ━━━━",
+      icon: ShoppingCart,
+      url: "#amazon",
+    },
+    {
+      title: "🛒 Amazon Products",
+      icon: ShoppingCart,
+      url: "/amazon",
+    },
+
+    // ==========================================
+    // 💼 B2B & NEGÓCIOS
+    // ==========================================
+    {
+      title: "━━━━ 💼 B2B ━━━━",
+      icon: Handshake,
+      url: "#b2b",
+    },
+    {
+      title: "🎯 Oportunidades",
+      icon: Target,
+      url: "/opportunities",
+    },
+    {
+      title: "🏢 Fornecedores",
+      icon: Building2,
+      url: "/suppliers",
+    },
+    {
+      title: "💼 B2B Solutions",
+      icon: Briefcase,
+      url: "/b2b-solutions",
+    },
+    {
+      title: "🏛️ Contratos Governamentais",
+      icon: Building2,
+      url: "/government-contracts",
+    },
+    {
       title: "🏭 Manufacturing",
       icon: Factory,
       url: "/manufacturing",
@@ -299,7 +197,7 @@ export function AppSidebar() {
     },
 
     // ==========================================
-    // ✅ COMPLIANCE & LOGISTICS (3)
+    // ✅ COMPLIANCE & LOGÍSTICA
     // ==========================================
     {
       title: "━━━━ ✅ COMPLIANCE ━━━━",
@@ -312,18 +210,18 @@ export function AppSidebar() {
       url: "/compliance",
     },
     {
-      title: "🚚 Logistics",
+      title: "🚚 Logística",
       icon: Truck,
       url: "/logistics",
     },
     {
-      title: "🏛️ Government Contracts",
-      icon: Building2,
-      url: "/government-contracts",
+      title: "📋 Guia Patent & Private Label",
+      icon: BookOpen,
+      url: "/product-patent-guide",
     },
 
     // ==========================================
-    // 📢 MARKETING AUTOMATION (3)
+    // 📢 MARKETING
     // ==========================================
     {
       title: "━━━━ 📢 MARKETING ━━━━",
@@ -341,92 +239,28 @@ export function AppSidebar() {
       url: "/google-ads-campaigns",
     },
     {
-      title: "📧 Email Marketing",
+      title: "📧 Email & Social Media",
       icon: Mail,
       url: "/marketing-dashboard",
     },
 
     // ==========================================
-    // 🌐 PUBLIC & MARKETING PAGES (10)
+    // ⚙️ CONFIGURAÇÕES
     // ==========================================
     {
-      title: "━━━━ 🌐 PUBLIC SITE ━━━━",
-      icon: Globe,
-      url: "#public",
-    },
-    {
-      title: "🏠 Public Site Home",
-      icon: Globe,
-      url: "/",
-    },
-    {
-      title: "🌍 Site Público",
-      icon: ExternalLink,
-      url: "/public-site",
-    },
-    {
-      title: "🤝 Global Partnerships",
-      icon: Handshake,
-      url: "/global-partnerships",
-    },
-    {
-      title: "⚡ Access Catalog",
-      icon: Zap,
-      url: "/premium-portfolio",
-    },
-    {
-      title: "📋 Patent & Private Label Guide",
-      icon: Gavel,
-      url: "/product-patent-guide",
-    },
-    {
-      title: "💼 Enterprise Solutions",
-      icon: Briefcase,
-      url: "/enterprise-solutions",
-    },
-    {
-      title: "⚡ Real-Time Execution",
-      icon: Activity,
-      url: "/real-time-execution",
-    },
-    {
-      title: "🛍️ Bundles",
-      icon: ShoppingBag,
-      url: "/bundles",
-    },
-    {
-      title: "📦 Products",
-      icon: Package,
-      url: "/products",
-    },
-    {
-      title: "📋 Pre-Order Policy",
-      icon: ClipboardList,
-      url: "/pre-order-policy",
-    },
-
-    // ==========================================
-    // ⚙️ SETTINGS & CONFIGURATION (4)
-    // ==========================================
-    {
-      title: "━━━━ ⚙️ SETTINGS ━━━━",
+      title: "━━━━ ⚙️ CONFIG ━━━━",
       icon: Settings,
       url: "#settings",
     },
     {
-      title: "🔑 Credentials Manager",
+      title: "📊 Dashboard",
+      icon: BarChart3,
+      url: "/dashboard",
+    },
+    {
+      title: "🔑 Credenciais",
       icon: Key,
       url: "/credentials-manager",
-    },
-    {
-      title: "⚡ Config 100 Fontes RFQ",
-      icon: Zap,
-      url: "/config-credentials",
-    },
-    {
-      title: "📧 Gmail OAuth Test",
-      icon: Mail,
-      url: "/gmail-oauth-test",
     },
     {
       title: "🔑 Setup de APIs",
@@ -445,8 +279,13 @@ export function AppSidebar() {
     },
     {
       title: "📊 Detalhes dos Registros",
-      icon: Database,
+      icon: ExternalLink,
       url: "/registration-details",
+    },
+    {
+      title: "👥 Usuários",
+      icon: Users,
+      url: "/home",
     },
   ];
 
@@ -458,7 +297,7 @@ export function AppSidebar() {
             <span className="text-gray-900">Global </span>
             <span className="text-yellow-500">Supplements</span>
           </h1>
-          <p className="text-sm text-muted-foreground">{t("site.tagline", "Premium Global Network")}</p>
+          <p className="text-sm text-muted-foreground">Premium Global Network</p>
         </div>
       </SidebarHeader>
       <SidebarContent className="pb-20">
@@ -494,7 +333,7 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter className="pb-20">
         <div className="text-xs text-muted-foreground px-4 py-2">
-          © 2024 Global Supplements - 55+ Pages
+          © 2024 Global Supplements — Premium Worldwide Network
         </div>
       </SidebarFooter>
     </Sidebar>
