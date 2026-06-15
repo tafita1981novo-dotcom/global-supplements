@@ -3,6 +3,7 @@ name: Deploy para Hostinger
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -21,7 +22,7 @@ jobs:
       - name: Instalar dependências
         run: cd projeto-copia && npm ci
 
-      - name: Criar .env com secrets
+      - name: Criar .env
         run: |
           cd projeto-copia
           cat > .env << ENVEOF
@@ -44,10 +45,10 @@ jobs:
           VITE_PAYONEER_ID=99133638
           ENVEOF
 
-      - name: Build
+      - name: Build produção
         run: cd projeto-copia && npm run build
 
-      - name: Criar .htaccess para SPA
+      - name: Criar .htaccess SPA
         run: |
           cat > projeto-copia/dist/.htaccess << 'HTEOF'
           Options -MultiViews
@@ -56,7 +57,7 @@ jobs:
           RewriteRule ^ index.html [QSA,L]
           HTEOF
 
-      - name: Deploy FTP para Hostinger
+      - name: Deploy FTP → Hostinger
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: 82.29.199.81
