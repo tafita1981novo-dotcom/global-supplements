@@ -904,6 +904,96 @@ export type Database = {
         }
         Relationships: []
       }
+      manual_interventions: {
+        Row: {
+          id: string
+          parallel_negotiation_id: string | null
+          rfq_id: string | null
+          alert_title: string
+          alert_message: string
+          alert_severity: string
+          available_actions: Json
+          status: string
+          user_action: string | null
+          user_response_at: string | null
+          auto_timeout_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          parallel_negotiation_id?: string | null
+          rfq_id?: string | null
+          alert_title: string
+          alert_message: string
+          alert_severity?: string
+          available_actions?: Json
+          status?: string
+          user_action?: string | null
+          user_response_at?: string | null
+          auto_timeout_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          parallel_negotiation_id?: string | null
+          rfq_id?: string | null
+          alert_title?: string
+          alert_message?: string
+          alert_severity?: string
+          available_actions?: Json
+          status?: string
+          user_action?: string | null
+          user_response_at?: string | null
+          auto_timeout_at?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      parallel_negotiations: {
+        Row: {
+          id: string
+          rfq_id: string | null
+          buyer_status: string
+          buyer_last_message: string | null
+          buyer_responded_at: string | null
+          active_suppliers: number
+          selected_supplier_id: string | null
+          selection_reason: string | null
+          final_commission_usd: number | null
+          status: string
+          started_at: string
+          completed_at: string | null
+        }
+        Insert: {
+          id?: string
+          rfq_id?: string | null
+          buyer_status?: string
+          buyer_last_message?: string | null
+          buyer_responded_at?: string | null
+          active_suppliers?: number
+          selected_supplier_id?: string | null
+          selection_reason?: string | null
+          final_commission_usd?: number | null
+          status?: string
+          started_at?: string
+          completed_at?: string | null
+        }
+        Update: {
+          id?: string
+          rfq_id?: string | null
+          buyer_status?: string
+          buyer_last_message?: string | null
+          buyer_responded_at?: string | null
+          active_suppliers?: number
+          selected_supplier_id?: string | null
+          selection_reason?: string | null
+          final_commission_usd?: number | null
+          status?: string
+          started_at?: string
+          completed_at?: string | null
+        }
+        Relationships: []
+      }
       opportunities: {
         Row: {
           ai_analysis: Json | null
@@ -1111,6 +1201,105 @@ export type Database = {
         }
         Relationships: []
       }
+      rfq_inbox: {
+        Row: {
+          id: string
+          product_description: string
+          quantity: number | null
+          budget_usd: number | null
+          buyer_name: string | null
+          buyer_email: string | null
+          buyer_country: string | null
+          delivery_deadline: string | null
+          source_api: string | null
+          status: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          product_description: string
+          quantity?: number | null
+          budget_usd?: number | null
+          buyer_name?: string | null
+          buyer_email?: string | null
+          buyer_country?: string | null
+          delivery_deadline?: string | null
+          source_api?: string | null
+          status?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          product_description?: string
+          quantity?: number | null
+          budget_usd?: number | null
+          buyer_name?: string | null
+          buyer_email?: string | null
+          buyer_country?: string | null
+          delivery_deadline?: string | null
+          source_api?: string | null
+          status?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
+      risk_assessments: {
+        Row: {
+          id: string
+          parallel_negotiation_id: string | null
+          rfq_id: string | null
+          risk_type: string
+          risk_level: string
+          risk_score: number
+          risk_description: string
+          risk_details: Json | null
+          auto_resolution_strategy: string | null
+          auto_resolution_possible: boolean
+          auto_resolution_attempted: boolean
+          auto_resolution_success: boolean
+          requires_manual_intervention: boolean
+          final_decision: string
+          detected_at: string
+          resolved_at: string | null
+        }
+        Insert: {
+          id?: string
+          parallel_negotiation_id?: string | null
+          rfq_id?: string | null
+          risk_type: string
+          risk_level?: string
+          risk_score?: number
+          risk_description: string
+          risk_details?: Json | null
+          auto_resolution_strategy?: string | null
+          auto_resolution_possible?: boolean
+          auto_resolution_attempted?: boolean
+          auto_resolution_success?: boolean
+          requires_manual_intervention?: boolean
+          final_decision?: string
+          detected_at?: string
+          resolved_at?: string | null
+        }
+        Update: {
+          id?: string
+          parallel_negotiation_id?: string | null
+          rfq_id?: string | null
+          risk_type?: string
+          risk_level?: string
+          risk_score?: number
+          risk_description?: string
+          risk_details?: Json | null
+          auto_resolution_strategy?: string | null
+          auto_resolution_possible?: boolean
+          auto_resolution_attempted?: boolean
+          auto_resolution_success?: boolean
+          requires_manual_intervention?: boolean
+          final_decision?: string
+          detected_at?: string
+          resolved_at?: string | null
+        }
+        Relationships: []
+      }
       suppliers: {
         Row: {
           active: boolean | null
@@ -1146,6 +1335,150 @@ export type Database = {
           id?: string
           name?: string
           reliability_score?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      supplier_apis: {
+        Row: {
+          id: string
+          name: string
+          api_type: string
+          base_url: string | null
+          api_key_env: string | null
+          tier: number
+          status: string
+          success_rate: number | null
+          avg_response_time_ms: number | null
+          total_queries: number
+          last_queried_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          api_type?: string
+          base_url?: string | null
+          api_key_env?: string | null
+          tier?: number
+          status?: string
+          success_rate?: number | null
+          avg_response_time_ms?: number | null
+          total_queries?: number
+          last_queried_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          api_type?: string
+          base_url?: string | null
+          api_key_env?: string | null
+          tier?: number
+          status?: string
+          success_rate?: number | null
+          avg_response_time_ms?: number | null
+          total_queries?: number
+          last_queried_at?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      supplier_product_mappings: {
+        Row: {
+          id: string
+          rfq_id: string | null
+          supplier_api_id: string | null
+          supplier_name: string
+          product_name: string
+          unit_price_usd: number
+          moq: number | null
+          max_quantity: number | null
+          delivery_days: number | null
+          credibility_score: number | null
+          commission_usd: number | null
+          commission_pct: number | null
+          product_match_score: number | null
+          payment_terms: string | null
+          negotiation_status: string
+          raw_data: Json | null
+          mapped_at: string
+        }
+        Insert: {
+          id?: string
+          rfq_id?: string | null
+          supplier_api_id?: string | null
+          supplier_name: string
+          product_name: string
+          unit_price_usd: number
+          moq?: number | null
+          max_quantity?: number | null
+          delivery_days?: number | null
+          credibility_score?: number | null
+          commission_usd?: number | null
+          commission_pct?: number | null
+          product_match_score?: number | null
+          payment_terms?: string | null
+          negotiation_status?: string
+          raw_data?: Json | null
+          mapped_at?: string
+        }
+        Update: {
+          id?: string
+          rfq_id?: string | null
+          supplier_api_id?: string | null
+          supplier_name?: string
+          product_name?: string
+          unit_price_usd?: number
+          moq?: number | null
+          max_quantity?: number | null
+          delivery_days?: number | null
+          credibility_score?: number | null
+          commission_usd?: number | null
+          commission_pct?: number | null
+          product_match_score?: number | null
+          payment_terms?: string | null
+          negotiation_status?: string
+          raw_data?: Json | null
+          mapped_at?: string
+        }
+        Relationships: []
+      }
+      supplier_selection_criteria: {
+        Row: {
+          id: string
+          weight_commission: number
+          weight_credibility: number
+          weight_delivery: number
+          weight_product_match: number
+          min_credibility_score: number
+          min_product_match_score: number
+          max_delivery_buffer_days: number
+          active: boolean
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          weight_commission?: number
+          weight_credibility?: number
+          weight_delivery?: number
+          weight_product_match?: number
+          min_credibility_score?: number
+          min_product_match_score?: number
+          max_delivery_buffer_days?: number
+          active?: boolean
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          weight_commission?: number
+          weight_credibility?: number
+          weight_delivery?: number
+          weight_product_match?: number
+          min_credibility_score?: number
+          min_product_match_score?: number
+          max_delivery_buffer_days?: number
+          active?: boolean
           updated_at?: string
         }
         Relationships: []
