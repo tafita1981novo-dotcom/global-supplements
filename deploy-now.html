@@ -1,0 +1,24 @@
+<!DOCTYPE html><html><head><title>GS Deploy</title></head>
+<body style="font-family:monospace;padding:20px;background:#1a1a2e;color:#0f0">
+<h2 id="s">Iniciando...</h2><pre id="l"></pre>
+<script>
+const H='3ed9fb75cad11526',B='https://srv1928-files.hstgr.io',D='https://github.com/tafita81/global-supplements/releases/download/deploy-v1/dist.zip',T='domains/globalsupplements.site/public_html';
+const l=s=>{document.getElementById('l').textContent+=s+'\n'};
+async function go(){
+try{
+l('1. Login...');
+const r=await fetch(B+'/'+H+'/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
+const t=await r.text();l('Token OK: '+t.substring(0,40));
+l('2. Download dist.zip...');document.getElementById('s').textContent='Baixando...';
+const d=await fetch(D);const b=await d.blob();l('Size: '+(b.size/1024/1024).toFixed(1)+'MB');
+l('3. Upload...');document.getElementById('s').textContent='Enviando...';
+const u=await fetch(B+'/'+H+'/api/resources/'+T+'/dist.zip?override=true',{method:'POST',headers:{'X-Auth':t},body:b});
+l('Upload: '+u.status);
+l('4. Extract...');
+const e=await fetch(B+'/'+H+'/api/command',{method:'POST',headers:{'X-Auth':t,'Content-Type':'application/json'},body:JSON.stringify({cmd:'unzip',args:['-o','/'+T+'/dist.zip','-d','/'+T+'/']})});
+l('Extract: '+e.status+' '+(await e.text()).substring(0,200));
+document.getElementById('s').textContent='DEPLOY OK!';
+}catch(e){l('ERRO: '+e.message)}
+}
+go();
+</script></body></html>
