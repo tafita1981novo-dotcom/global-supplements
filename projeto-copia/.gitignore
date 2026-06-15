@@ -40,3 +40,4 @@ CLAUDE_EXPORT_PRIVATE.md
 *.bak
 *.swp
 *~
+deploy-webhook.php
