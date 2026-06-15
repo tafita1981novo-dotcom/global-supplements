@@ -1,0 +1,8 @@
+{
+  "buildCommand": "cd projeto-copia && npm run build",
+  "outputDirectory": "projeto-copia/dist",
+  "installCommand": "cd projeto-copia && npm ci",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
