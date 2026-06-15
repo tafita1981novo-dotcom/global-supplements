@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "hVH1ExK8gA7lC2etZ75ac"
+uri = "file://CLAUDE_EXPORT.md"
+type = "text"
+title = "Exportação Completa do Projeto — Global Supplements"
