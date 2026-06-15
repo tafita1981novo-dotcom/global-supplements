@@ -124,7 +124,7 @@ export function PublicHero() {
                 </div>
                 
                 <a 
-                  href="https://www.globalsupplements.site/amazon"
+                  href="https://globalsupplements.site/amazon"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-block"

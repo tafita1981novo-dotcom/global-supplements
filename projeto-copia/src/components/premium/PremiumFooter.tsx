@@ -82,7 +82,7 @@ export function PremiumFooter() {
               </div>
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Globe className="h-4 w-4" />
-                www.globalsupplements.site
+                globalsupplements.site
               </div>
               <div className="flex items-center gap-2 text-muted-foreground">
                 <MapPin className="h-4 w-4" />

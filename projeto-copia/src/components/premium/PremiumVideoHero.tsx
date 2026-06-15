@@ -133,7 +133,7 @@ export function PremiumVideoHero() {
             
             <div className="flex flex-col sm:flex-row gap-6 clean-fade-in">
               <a 
-                href="https://www.globalsupplements.site/amazon"
+                href="https://globalsupplements.site/amazon"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-block group"
