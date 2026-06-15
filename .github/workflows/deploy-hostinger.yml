@@ -2,40 +2,53 @@ name: Deploy para Hostinger
 
 on:
   push:
-    branches: [main]
+    branches: [ main, master ]
   workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'
+    - cron: '30 1 * * *'
+    - cron: '0 3 * * *'
+    - cron: '30 4 * * *'
+    - cron: '0 6 * * *'
+    - cron: '30 7 * * *'
+    - cron: '0 9 * * *'
+    - cron: '30 10 * * *'
+    - cron: '0 12 * * *'
+    - cron: '30 13 * * *'
+    - cron: '0 15 * * *'
+    - cron: '30 16 * * *'
+    - cron: '0 18 * * *'
+    - cron: '30 19 * * *'
+    - cron: '0 21 * * *'
+    - cron: '30 22 * * *'
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
+    
     steps:
       - name: Checkout código
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/checkout@v3
+      
+      - name: Configurar Node.js
+        uses: actions/setup-node@v3
         with:
-          node-version: '20'
+          node-version: '18'
           cache: 'npm'
-          cache-dependency-path: projeto-copia/package-lock.json
-
+          cache-dependency-path: 'projeto-copia/package-lock.json'
+      
       - name: Instalar dependências
-        run: cd projeto-copia && npm ci
+        working-directory: ./projeto-copia
+        run: npm ci
 
       - name: Criar .env
+        working-directory: ./projeto-copia
         run: |
-          cd projeto-copia
           cat > .env << ENVEOF
           VITE_SUPABASE_URL=https://twglceexfetejawoumsr.supabase.co
           VITE_SUPABASE_ANON_KEY=${{ secrets.VITE_SUPABASE_ANON_KEY }}
           VITE_RAPIDAPI_KEY_1=${{ secrets.RAPIDAPI_KEY }}
-          VITE_RAPIDAPI_KEY_2=${{ secrets.RAPIDAPI_KEY_2 }}
-          VITE_RAPIDAPI_KEY_3=${{ secrets.RAPIDAPI_KEY_3 }}
           VITE_OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
-          VITE_COMPANY_NAME=Rafael Roberto Rodrigues de Oliveira Consultoria em Tecnologia da Informação CORP
-          VITE_COMPANY_EIN=33-3939483
-          VITE_COMPANY_ADDRESS=6200 Metrowest, Orlando, FL 32385, USA
-          VITE_TRADE_NAME=Global Supplements - Premium Worldwide Network
           VITE_STRIPE_PUBLIC_KEY=${{ secrets.STRIPE_PUBLIC_KEY }}
           STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }}
           SENDGRID_API_KEY=${{ secrets.SENDGRID_API_KEY }}
@@ -44,26 +57,28 @@ jobs:
           GMAIL_REFRESH_TOKEN=${{ secrets.GMAIL_REFRESH_TOKEN }}
           VITE_PAYONEER_ID=99133638
           ENVEOF
-
-      - name: Build produção
-        run: cd projeto-copia && npm run build
+      
+      - name: Build do projeto
+        working-directory: ./projeto-copia
+        run: npm run build
 
       - name: Criar .htaccess SPA
         run: |
-          cat > projeto-copia/dist/.htaccess << 'HTEOF'
+          cat > ./projeto-copia/dist/.htaccess << 'HTEOF'
           Options -MultiViews
           RewriteEngine On
           RewriteCond %{REQUEST_FILENAME} !-f
           RewriteRule ^ index.html [QSA,L]
           HTEOF
-
-      - name: Deploy FTP → Hostinger
+      
+      - name: Deploy via FTP para Hostinger
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: 82.29.199.81
           username: u930134944
-          password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
-          local-dir: projeto-copia/dist/
+          password: ${{ secrets.FTP_PASSWORD }}
+          port: 21
+          local-dir: ./projeto-copia/dist/
           server-dir: /public_html/
           dangerous-clean-slate: false
           exclude: |
