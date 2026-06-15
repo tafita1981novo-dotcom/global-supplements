@@ -1,5 +1,3 @@
-import { getCuratedProducts, type CuratedProduct } from "@/data/curatedProducts";
-
 export interface RapidAPIConfig {
   key: string;
   host: string;
@@ -13,6 +11,7 @@ export class MultiAPIClient {
   private readonly MAX_FREE_REQUESTS = 10000;
 
   constructor() {
+    // Usando Real-Time Amazon Data (letscrape)
     this.apis = [
       {
         key: import.meta.env.VITE_RAPIDAPI_KEY_1 || '',
@@ -22,93 +21,82 @@ export class MultiAPIClient {
     ].filter(api => api.key);
   }
 
-  async searchProducts(
-    query: string,
-    limit: number = 50,
-    countryCode: string = 'US',
-    domain: string = 'amazon.com',
-    sortBy: string = 'RELEVANCE'
-  ): Promise<any[]> {
-    // Try the real API first
-    if (this.apis.length > 0) {
-      let attempts = 0;
-      while (attempts < this.apis.length) {
-        const api = this.getCurrentAPI();
-        const used = this.requestCounts.get(api.name) || 0;
+  async searchProducts(query: string, limit: number = 50, countryCode: string = 'US', domain: string = 'amazon.com', sortBy: string = 'RELEVANCE'): Promise<any[]> {
+    if (this.apis.length === 0) {
+      console.error('❌ No RapidAPI keys configured! Cannot fetch real Amazon products.');
+      return [];
+    }
 
-        if (used >= this.MAX_FREE_REQUESTS) {
-          this.switchToNextAPI();
-          attempts++;
-          continue;
-        }
+    let attempts = 0;
+    let lastError: Error | null = null;
 
-        try {
-          const products = await this.fetchFromAPI(api, query, limit, countryCode, domain, sortBy);
-          if (products.length > 0) {
-            this.incrementRequestCount(api.name);
-            console.log(`✅ ${products.length} produtos reais da Amazon via ${api.name}`);
-            return products;
-          }
-          // API returned 0 products — fall through to curated
-          console.warn(`⚠️ API retornou 0 produtos, usando curados`);
-          break;
-        } catch (error: any) {
-          console.warn(`⚠️ ${api.name} falhou (${error.message}), usando produtos curados`);
-          break;
-        }
+    while (attempts < this.apis.length) {
+      const api = this.getCurrentAPI();
+      const used = this.requestCounts.get(api.name) || 0;
+
+      if (used >= this.MAX_FREE_REQUESTS) {
+        console.log(`${api.name} reached limit (${used}/${this.MAX_FREE_REQUESTS}), switching...`);
+        this.switchToNextAPI();
+        attempts++;
+        continue;
+      }
+
+      try {
+        const products = await this.fetchFromAPI(api, query, limit, countryCode, domain, sortBy);
+        this.incrementRequestCount(api.name);
+        console.log(`✅ ${products.length} produtos reais da Amazon carregados via ${api.name}!`);
+        return products;
+      } catch (error: any) {
+        console.error(`${api.name} failed:`, error.message);
+        lastError = error;
+        this.switchToNextAPI();
+        attempts++;
       }
     }
 
-    // ── FALLBACK: Always return curated products ────────────────────────────
-    console.log(`📦 Usando produtos curados para query="${query}"`);
-    const category = this.queryToCategory(query);
-    const curated = getCuratedProducts(category, null, null);
-    // Shuffle for variety and cap at limit
-    const shuffled = [...curated].sort(() => Math.random() - 0.5);
-    return shuffled.slice(0, Math.min(limit, shuffled.length));
+    console.error('❌ All APIs failed or reached limits. Use Broker Dashboard to ingest data.');
+    return [];
   }
 
-  /** Map a query string to a curated category key */
-  private queryToCategory(query: string): string {
-    const q = query.toLowerCase();
-    if (q.includes('mushroom') || q.includes('reishi') || q.includes('lion') || q.includes('cordyceps') || q.includes('chaga')) return 'mycogenesis';
-    if (q.includes('nootropic') || q.includes('nad') || q.includes('quantum') || q.includes('resveratrol') || q.includes('berberine')) return 'quantum';
-    if (q.includes('protein') || q.includes('creatine') || q.includes('bcaa') || q.includes('pre-workout') || q.includes('whey') || q.includes('sport')) return 'sports';
-    if (q.includes('tracker') || q.includes('monitor') || q.includes('blood pressure') || q.includes('thermometer') || q.includes('device') || q.includes('oximeter')) return 'devices';
-    if (q.includes('vitamin') || q.includes('supplement') || q.includes('mineral') || q.includes('probiotic') || q.includes('omega') || q.includes('collagen capsule') || q.includes('biotin capsule')) return 'vitamins';
-    if (q.includes('shampoo') || q.includes('conditioner') || q.includes('skincare') || q.includes('serum') || q.includes('moisturizer') || q.includes('makeup') || q.includes('beauty') || q.includes('hair') || q.includes('skin')) return 'beauty';
-    if (q.includes('immune') || q.includes('pain') || q.includes('digestive') || q.includes('cold') || q.includes('flu') || q.includes('bandage') || q.includes('wellness')) return 'wellness';
-    return 'all';
-  }
-
-  private async fetchFromAPI(
-    api: RapidAPIConfig,
-    query: string,
-    limit: number,
-    countryCode: string = 'US',
-    domain: string = 'amazon.com',
-    sortBy: string = 'RELEVANCE'
-  ): Promise<any[]> {
+  private async fetchFromAPI(api: RapidAPIConfig, query: string, limit: number, countryCode: string = 'US', domain: string = 'amazon.com', sortBy: string = 'RELEVANCE'): Promise<any[]> {
+    // Usando endpoint /search da Real-Time Amazon Data
     const url = `https://${api.host}/search`;
-
+    
+    // 🔧 FIX: Mapeia marketplace IDs internos para códigos ISO que a API Amazon aceita
     const countryCodeMapping: Record<string, string> = {
-      'UK': 'GB', 'US': 'US', 'CA': 'CA', 'DE': 'DE', 'FR': 'FR',
-      'IT': 'IT', 'ES': 'ES', 'JP': 'JP', 'AU': 'AU', 'NL': 'NL',
-      'SE': 'SE', 'SG': 'SG', 'PL': 'PL', 'SA': 'SA'
+      'UK': 'GB',  // ⚠️ FIX CRÍTICO: API Amazon usa GB ao invés de UK
+      'US': 'US',
+      'CA': 'CA',
+      'DE': 'DE',
+      'FR': 'FR',
+      'IT': 'IT',
+      'ES': 'ES',
+      'JP': 'JP',
+      'AU': 'AU',
+      'NL': 'NL',
+      'SE': 'SE',
+      'SG': 'SG',
+      'PL': 'PL',
+      'SA': 'SA'
     };
+    
     const apiCountryCode = countryCodeMapping[countryCode] || countryCode;
-
+    console.log(`🌍 Marketplace: ${countryCode} → API Country: ${apiCountryCode}`);
+    
+    // Mapeamento de ordenação para valores aceitos pela API Real-Time Amazon Data
     const sortMapping: Record<string, string> = {
-      'HIGHEST_RATED': 'REVIEWS',
+      'HIGHEST_RATED': 'REVIEWS',  // Tenta REVIEWS ao invés de HIGHEST_RATED
       'RELEVANCE': 'RELEVANCE'
     };
+    
     const apiSortValue = sortMapping[sortBy] || sortBy;
-
+    console.log(`🔍 Ordenando por: ${apiSortValue}`);
+    
     const params = new URLSearchParams({
-      query,
+      query: query,  // Usa a query diretamente sem mapear keywords
       page: '1',
-      country: apiCountryCode,
-      sort_by: apiSortValue,
+      country: apiCountryCode,  // ✅ Usa código mapeado (UK → GB)
+      sort_by: apiSortValue,  // Permite ordenação customizada
       product_condition: 'ALL'
     });
 
@@ -130,9 +118,23 @@ export class MultiAPIClient {
 
   private parseAPIResponse(data: any, apiName: string, domain: string = 'amazon.com'): any[] {
     const AFFILIATE_TAG = 'globalsupleme-20';
+    
+    // Parser para Real-Time Amazon Data API
     const products = data.data?.products || [];
-
-    return products.map((p: any) => ({
+    
+    // 🔍 DEBUG: Log primeiro produto para verificar estrutura
+    if (products.length > 0) {
+      console.log(`📦 [${domain}] Estrutura do produto:`, {
+        asin: products[0].asin,
+        title: products[0].product_title?.substring(0, 50),
+        photo: products[0].product_photo ? 'OK' : 'MISSING',
+        url: products[0].product_url ? 'OK' : 'MISSING',
+        image: products[0].image ? 'OK' : 'MISSING',
+        keys: Object.keys(products[0]).filter(k => k.includes('photo') || k.includes('image') || k.includes('url'))
+      });
+    }
+    
+    const parsed = products.map((p: any) => ({
       asin: p.asin,
       title: p.product_title || p.title,
       price: p.product_price || p.price || '$0.00',
@@ -143,6 +145,29 @@ export class MultiAPIClient {
       prime: p.is_prime || p.prime || false,
       affiliateLink: `https://www.${domain}/dp/${p.asin}?tag=${AFFILIATE_TAG}`
     }));
+    
+    // 🔍 DEBUG: Verifica se há produtos sem imagem ou link
+    const problematicos = parsed.filter(p => !p.image || !p.asin);
+    if (problematicos.length > 0) {
+      console.warn(`⚠️ [${domain}] ${problematicos.length} produtos sem imagem/ASIN!`);
+    }
+    
+    return parsed;
+  }
+
+  private getCategoryKeywords(category: string): string {
+    const keywords: Record<string, string> = {
+      'all': 'supplements vitamins health wellness',
+      'beauty': 'collagen beauty supplements anti-aging skincare vitamins',
+      'quantum': 'advanced supplements nootropics smart drugs cognitive enhancement',
+      'medical': 'medical grade supplements pharmaceutical vitamins',
+      'gadgets': 'health gadgets fitness tracker smart watch wellness device',
+      'wellness': 'wellness supplements herbal natural vitamins',
+      'b2b': 'bulk supplements wholesale vitamins business',
+      'government': 'institutional supplements medical supplies',
+      'manufacturing': 'industrial supplements raw materials'
+    };
+    return keywords[category] || 'health supplements vitamins';
   }
 
   private getCurrentAPI(): RapidAPIConfig {
@@ -156,6 +181,7 @@ export class MultiAPIClient {
   private incrementRequestCount(apiName: string): void {
     const current = this.requestCounts.get(apiName) || 0;
     this.requestCounts.set(apiName, current + 1);
+    console.log(`📊 ${apiName}: ${current + 1}/${this.MAX_FREE_REQUESTS} requests usadas`);
   }
 
   getUsageStats(): { api: string; used: number; remaining: number }[] {
