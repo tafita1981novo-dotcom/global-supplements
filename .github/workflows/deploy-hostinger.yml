@@ -51,19 +51,24 @@ jobs:
       
       - name: Deploy via SFTP para Hostinger
         run: |
-          sudo apt-get install -y sshpass > /dev/null 2>&1
+          sudo apt-get install -y sshpass lftp > /dev/null 2>&1
           
-          echo "=== Listing server directories ==="
-          sshpass -p "${{ secrets.FTP_PASSWORD }}" ssh -p 65002 -o StrictHostKeyChecking=no u930134944@82.29.199.81 "ls -la ~/public_html/ | head -10; echo '---'; ls ~/domains/ 2>/dev/null || echo 'no domains dir'"
+          echo "=== Listing directories via SFTP ==="
+          sshpass -p "${{ secrets.FTP_PASSWORD }}" sftp -P 65002 -o StrictHostKeyChecking=no -o BatchMode=no u930134944@82.29.199.81 << 'SFTP' || true
+          ls public_html
+          ls domains
+          quit
+          SFTP
           
-          echo "=== Cleaning public_html ==="
-          sshpass -p "${{ secrets.FTP_PASSWORD }}" ssh -p 65002 -o StrictHostKeyChecking=no u930134944@82.29.199.81 "rm -rf ~/public_html/*"
-          
-          echo "=== Uploading via SCP ==="
-          cd projeto-copia/dist
-          sshpass -p "${{ secrets.FTP_PASSWORD }}" scp -P 65002 -o StrictHostKeyChecking=no -r ./* u930134944@82.29.199.81:~/public_html/
-          
-          echo "=== Verifying upload ==="
-          sshpass -p "${{ secrets.FTP_PASSWORD }}" ssh -p 65002 -o StrictHostKeyChecking=no u930134944@82.29.199.81 "ls -la ~/public_html/ | head -10; echo '---'; ls ~/public_html/assets/ | head -5"
+          echo "=== Uploading via lftp SFTP ==="
+          lftp -e "
+            set sftp:connect-program 'ssh -p 65002 -o StrictHostKeyChecking=no';
+            open sftp://u930134944:${{ secrets.FTP_PASSWORD }}@82.29.199.81;
+            cd public_html;
+            mirror -R --delete --verbose ./projeto-copia/dist/ .;
+            ls;
+            quit
+          " || echo "lftp failed, trying alternative..."
           
           echo "✅ Deploy complete!"
+        working-directory: ${{ github.workspace }}
