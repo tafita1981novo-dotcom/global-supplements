@@ -13,6 +13,20 @@ jobs:
       - name: Checkout código
         uses: actions/checkout@v4
       
+      - name: Debug FTP - List directory structure
+        run: |
+          sudo apt-get install -y lftp > /dev/null 2>&1
+          lftp -u u930134944,${{ secrets.FTP_PASSWORD }} ftp://82.29.199.81 << 'FTP'
+          set ssl:verify-certificate no
+          set ftp:ssl-allow yes
+          ls /
+          echo "---"
+          ls /public_html/
+          echo "---"
+          ls /domains/ 2>/dev/null || echo "no /domains/"
+          quit
+          FTP
+
       - name: Configurar Node.js
         uses: actions/setup-node@v4
         with:
@@ -30,20 +44,9 @@ jobs:
           cat > .env << EOF
           VITE_SUPABASE_URL=https://twglceexfetejawoumsr.supabase.co
           VITE_SUPABASE_ANON_KEY=${{ secrets.VITE_SUPABASE_ANON_KEY }}
-          VITE_RAPIDAPI_KEY_1=${{ secrets.RAPIDAPI_KEY }}
-          VITE_OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
-          VITE_STRIPE_PUBLIC_KEY=${{ secrets.STRIPE_PUBLIC_KEY }}
-          STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }}
-          SENDGRID_API_KEY=${{ secrets.SENDGRID_API_KEY }}
-          GMAIL_CLIENT_ID=${{ secrets.GMAIL_CLIENT_ID }}
-          GMAIL_CLIENT_SECRET=${{ secrets.GMAIL_CLIENT_SECRET }}
-          GMAIL_REFRESH_TOKEN=${{ secrets.GMAIL_REFRESH_TOKEN }}
           VITE_PAYONEER_ID=99133638
           EOF
-          # Remover espaços iniciais de cada linha
           sed -i 's/^          //' .env
-          echo "✅ .env criado:"
-          cat .env | head -3
       
       - name: Build do projeto
         working-directory: ./projeto-copia
@@ -69,7 +72,7 @@ jobs:
           port: 21
           local-dir: ./projeto-copia/dist/
           server-dir: /public_html/
-          dangerous-clean-slate: false
+          dangerous-clean-slate: true
           exclude: |
             **/.git*
             **/.git*/**
