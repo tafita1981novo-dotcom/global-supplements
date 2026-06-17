@@ -48,26 +48,22 @@ jobs:
           RewriteRule ^ index.html [QSA,L]
           HTEOF
           sed -i 's/^          //' dist/.htaccess
-
-      - name: List FTP directories
-        run: |
-          curl -s --ftp-pasv --list-only "ftp://82.29.199.81/" --user "u930134944:${{ secrets.FTP_PASSWORD }}" --connect-timeout 15 --max-time 30 || echo "root listing failed"
-          echo "---"
-          curl -s --ftp-pasv --list-only "ftp://82.29.199.81/domains/" --user "u930134944:${{ secrets.FTP_PASSWORD }}" --connect-timeout 15 --max-time 30 2>/dev/null || echo "no /domains/"
-          echo "---"
-          curl -s --ftp-pasv --list-only "ftp://82.29.199.81/domains/globalsupplements.site/" --user "u930134944:${{ secrets.FTP_PASSWORD }}" --connect-timeout 15 --max-time 30 2>/dev/null || echo "no /domains/globalsupplements.site/"
       
-      - name: Deploy via FTP para Hostinger
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: 82.29.199.81
-          username: u930134944
-          password: ${{ secrets.FTP_PASSWORD }}
-          port: 21
-          local-dir: ./projeto-copia/dist/
-          server-dir: /public_html/
-          dangerous-clean-slate: true
-          exclude: |
-            **/.git*
-            **/.git*/**
-            **/node_modules/**
+      - name: Deploy via SFTP para Hostinger
+        run: |
+          sudo apt-get install -y sshpass > /dev/null 2>&1
+          
+          echo "=== Listing server directories ==="
+          sshpass -p "${{ secrets.FTP_PASSWORD }}" ssh -p 65002 -o StrictHostKeyChecking=no u930134944@82.29.199.81 "ls -la ~/public_html/ | head -10; echo '---'; ls ~/domains/ 2>/dev/null || echo 'no domains dir'"
+          
+          echo "=== Cleaning public_html ==="
+          sshpass -p "${{ secrets.FTP_PASSWORD }}" ssh -p 65002 -o StrictHostKeyChecking=no u930134944@82.29.199.81 "rm -rf ~/public_html/*"
+          
+          echo "=== Uploading via SCP ==="
+          cd projeto-copia/dist
+          sshpass -p "${{ secrets.FTP_PASSWORD }}" scp -P 65002 -o StrictHostKeyChecking=no -r ./* u930134944@82.29.199.81:~/public_html/
+          
+          echo "=== Verifying upload ==="
+          sshpass -p "${{ secrets.FTP_PASSWORD }}" ssh -p 65002 -o StrictHostKeyChecking=no u930134944@82.29.199.81 "ls -la ~/public_html/ | head -10; echo '---'; ls ~/public_html/assets/ | head -5"
+          
+          echo "✅ Deploy complete!"
