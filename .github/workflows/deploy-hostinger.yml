@@ -13,20 +13,6 @@ jobs:
       - name: Checkout código
         uses: actions/checkout@v4
       
-      - name: Debug FTP - List directory structure
-        run: |
-          sudo apt-get install -y lftp > /dev/null 2>&1
-          lftp -u u930134944,${{ secrets.FTP_PASSWORD }} ftp://82.29.199.81 << 'FTP'
-          set ssl:verify-certificate no
-          set ftp:ssl-allow yes
-          ls /
-          echo "---"
-          ls /public_html/
-          echo "---"
-          ls /domains/ 2>/dev/null || echo "no /domains/"
-          quit
-          FTP
-
       - name: Configurar Node.js
         uses: actions/setup-node@v4
         with:
@@ -62,6 +48,14 @@ jobs:
           RewriteRule ^ index.html [QSA,L]
           HTEOF
           sed -i 's/^          //' dist/.htaccess
+
+      - name: List FTP directories
+        run: |
+          curl -s --ftp-pasv --list-only "ftp://82.29.199.81/" --user "u930134944:${{ secrets.FTP_PASSWORD }}" --connect-timeout 15 --max-time 30 || echo "root listing failed"
+          echo "---"
+          curl -s --ftp-pasv --list-only "ftp://82.29.199.81/domains/" --user "u930134944:${{ secrets.FTP_PASSWORD }}" --connect-timeout 15 --max-time 30 2>/dev/null || echo "no /domains/"
+          echo "---"
+          curl -s --ftp-pasv --list-only "ftp://82.29.199.81/domains/globalsupplements.site/" --user "u930134944:${{ secrets.FTP_PASSWORD }}" --connect-timeout 15 --max-time 30 2>/dev/null || echo "no /domains/globalsupplements.site/"
       
       - name: Deploy via FTP para Hostinger
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
